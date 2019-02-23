@@ -1,10 +1,10 @@
 ## SimdJsonSharp
-C# version of Daniel Lemire's SimdJson (ported from C by hands, I tried to keep the same format and API).
-Accelerated with `System.Runtime.Intrinsics` (e.g. see here).
+C# version of Daniel Lemire's [SimdJson](https://github.com/lemire/simdjson) (ported from C by hands, I tried to keep the same format and API).
+Accelerated with `System.Runtime.Intrinsics` (e.g. [see here](https://github.com/EgorBo/SimdJsonSharp/blob/master/src/stage1_find_marks.cs)).
 
 ## Benchmarks
-The following benchmark compares SimdJsonSharp with .NET Core 3.0 Utf8JsonReader - open a file, 
-count tokens with type=number, close the file. See sources.
+The following [benchmark](https://github.com/EgorBo/SimdJsonSharp/blob/master/benchmarks/CountTokens.cs) compares `SimdJsonSharp` with .NET Core 3.0 `Utf8JsonReader` - open a file, 
+count tokens with type=number, close the file.
 
 ```
 |            Method |          data |           fileName |         Mean |       Error |     StdDev | Ratio | RatioSD |
