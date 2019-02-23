@@ -22,8 +22,7 @@ namespace Benchmarks
 
             public ConfigWithCustomEnvVars()
             {
-                Add(Job.Core
-                    .With(new[] { new EnvironmentVariable(JitNoInline, "1") }));
+                Add(Job.Core.With(new[] { new EnvironmentVariable(JitNoInline, "1") }));
             }
         }
 
@@ -34,16 +33,24 @@ namespace Benchmarks
 
             testDataDir = @"C:\prj\simdjsonsharp\external\simdjson\jsonexamples"; // TODO: fix absolute path
 
-            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories);
-            files = new [] { @"C:\prj\simdjsonsharp\external\simdjson\jsonexamples\canada.json" };
+            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories).Take(7).ToArray();
 
             foreach (var file in files)
-                yield return new object[] {File.ReadAllBytes(file), Path.GetFileName(file)};
+            {
+                byte[] bytes = File.ReadAllBytes(file);
+                yield return new object[]
+                    {
+                        bytes,
+                        Path.GetFileName(file),
+                        Math.Round(bytes.Length / 1000.0, 2).ToString("N") + " Kb"
+                    };
+            }
         }
+
 
         [Benchmark(Baseline = true)]
         [ArgumentsSource(nameof(TestData))]
-        public unsafe ulong SimdJsonSharpApi(byte[] data, string fileName)
+        public unsafe ulong SimdJsonSharpApi(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
             using (ParsedJson doc = SimdJson.build_parsed_json(data))
@@ -52,7 +59,7 @@ namespace Benchmarks
                 {
                     while (iterator.move_forward())
                     {
-                        if (iterator.GetTokenType() == JsonTokenType.Number)
+                        if (iterator.is_integer() || iterator.is_double())
                         {
                             numbersCount++;
                         }
@@ -65,7 +72,7 @@ namespace Benchmarks
 
         [Benchmark]
         [ArgumentsSource(nameof(TestData))]
-        public unsafe ulong Utf8JsonReaderApi(byte[] data, string fileName)
+        public unsafe ulong Utf8JsonReaderApi(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
             var reader = new Utf8JsonReader(data, true, default);
@@ -82,7 +89,7 @@ namespace Benchmarks
 
         [Benchmark]
         [ArgumentsSource(nameof(TestData))]
-        public ulong JsonNet(byte[] data, string fileName)
+        public ulong JsonNet(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
             using (var streamReader = new StreamReader(new MemoryStream(data)))
@@ -103,7 +110,7 @@ namespace Benchmarks
 
         [Benchmark]
         [ArgumentsSource(nameof(TestData))]
-        public ulong SpanJsonUtf8(byte[] data, string fileName)
+        public ulong SpanJsonUtf8(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
             var reader = new SpanJson.JsonReader<byte>(data);

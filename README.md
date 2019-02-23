@@ -7,27 +7,42 @@ The following [benchmark](https://github.com/EgorBo/SimdJsonSharp/blob/master/be
 count tokens with type=number, close the file.
 
 ```
-|            Method |          data |           fileName |         Mean |
-|------------------ |-------------- |------------------- |-------------:|
-|  SimdJsonSharpApi | System.Byte[] | apache_builds.json |    146.42 us |
-| Utf8JsonReaderApi | System.Byte[] | apache_builds.json |    225.74 us |
-|           JsonNet | System.Byte[] | apache_builds.json |    459.89 us |
-|                   |               |                    |              |
-|  SimdJsonSharpApi | System.Byte[] |        canada.json |  6,655.92 us |
-| Utf8JsonReaderApi | System.Byte[] |        canada.json |  6,430.60 us | (canada.json contains only numbers)
-|           JsonNet | System.Byte[] |        canada.json | 69,500.56 us |
-|                   |               |                    |              |
-|  SimdJsonSharpApi | System.Byte[] |  citm_catalog.json |  2,168.55 us |
-| Utf8JsonReaderApi | System.Byte[] |  citm_catalog.json |  3,781.00 us |
-|           JsonNet | System.Byte[] |  citm_catalog.json |  5,881.58 us |
-|                   |               |                    |              |
-|  SimdJsonSharpApi | System.Byte[] | github_events.json |     65.62 us |
-| Utf8JsonReaderApi | System.Byte[] | github_events.json |    110.89 us |
-|           JsonNet | System.Byte[] | github_events.json |    214.77 us |
-|                   |               |                    |              |
-|  SimdJsonSharpApi | System.Byte[] |     gsoc-2018.json |  2,494.75 us |
-| Utf8JsonReaderApi | System.Byte[] |     gsoc-2018.json |  4,736.56 us |
-|           JsonNet | System.Byte[] |     gsoc-2018.json |  6,722.00 us |
+|            Method |          data |           fileName |    fileSize |         Mean | Ratio |
+|------------------ |-------------- |------------------- |------------ |-------------:|------:|
+|  SimdJsonSharpApi | System.Byte[] | apache_builds.json |   127.28 Kb |     99.28 us |  1.00 |
+| Utf8JsonReaderApi | System.Byte[] | apache_builds.json |   127.28 Kb |    226.42 us |  2.28 |
+|           JsonNet | System.Byte[] | apache_builds.json |   127.28 Kb |    461.30 us |  4.64 |
+|      SpanJsonUtf8 | System.Byte[] | apache_builds.json |   127.28 Kb |    168.08 us |  1.69 |
+|                   |               |                    |             |              |       |
+|  SimdJsonSharpApi | System.Byte[] |        canada.json | 2,251.05 Kb |  4,494.44 us |  1.00 |
+| Utf8JsonReaderApi | System.Byte[] |        canada.json | 2,251.05 Kb |  6,308.01 us |  1.40 |
+|           JsonNet | System.Byte[] |        canada.json | 2,251.05 Kb | 67,718.12 us | 15.06 |
+|      SpanJsonUtf8 | System.Byte[] |        canada.json | 2,251.05 Kb |  6,679.82 us |  1.49 |
+|                   |               |                    |             |              |       |
+|  SimdJsonSharpApi | System.Byte[] |  citm_catalog.json | 1,727.20 Kb |  1,572.78 us |  1.00 |
+| Utf8JsonReaderApi | System.Byte[] |  citm_catalog.json | 1,727.20 Kb |  3,786.10 us |  2.41 |
+|           JsonNet | System.Byte[] |  citm_catalog.json | 1,727.20 Kb |  5,903.38 us |  3.75 |
+|      SpanJsonUtf8 | System.Byte[] |  citm_catalog.json | 1,727.20 Kb |  3,021.13 us |  1.92 |
+|                   |               |                    |             |              |       |
+|  SimdJsonSharpApi | System.Byte[] | github_events.json |    65.13 Kb |     46.01 us |  1.00 |
+| Utf8JsonReaderApi | System.Byte[] | github_events.json |    65.13 Kb |    113.80 us |  2.47 |
+|           JsonNet | System.Byte[] | github_events.json |    65.13 Kb |    214.01 us |  4.65 |
+|      SpanJsonUtf8 | System.Byte[] | github_events.json |    65.13 Kb |     89.09 us |  1.94 |
+|                   |               |                    |             |              |       |
+|  SimdJsonSharpApi | System.Byte[] |     gsoc-2018.json | 3,327.83 Kb |  2,209.42 us |  1.00 |
+| Utf8JsonReaderApi | System.Byte[] |     gsoc-2018.json | 3,327.83 Kb |  4,010.10 us |  1.82 |
+|           JsonNet | System.Byte[] |     gsoc-2018.json | 3,327.83 Kb |  6,729.44 us |  3.05 |
+|      SpanJsonUtf8 | System.Byte[] |     gsoc-2018.json | 3,327.83 Kb |  2,759.59 us |  1.25 |
+|                   |               |                    |             |              |       |
+|  SimdJsonSharpApi | System.Byte[] |   instruments.json |   220.35 Kb |    257.78 us |  1.00 |
+| Utf8JsonReaderApi | System.Byte[] |   instruments.json |   220.35 Kb |    594.22 us |  2.31 |
+|           JsonNet | System.Byte[] |   instruments.json |   220.35 Kb |    980.42 us |  3.80 |
+|      SpanJsonUtf8 | System.Byte[] |   instruments.json |   220.35 Kb |    409.47 us |  1.59 |
+|                   |               |                    |             |              |       |
+|  SimdJsonSharpApi | System.Byte[] |     marine_ik.json | 2,983.47 Kb |  8,510.30 us |  1.00 |
+| Utf8JsonReaderApi | System.Byte[] |     marine_ik.json | 2,983.47 Kb | 11,465.33 us |  1.35 |
+|           JsonNet | System.Byte[] |     marine_ik.json | 2,983.47 Kb | 32,113.43 us |  3.77 |
+|      SpanJsonUtf8 | System.Byte[] |     marine_ik.json | 2,983.47 Kb |  8,885.77 us |  1.04 |
 ```
 
 Environment:
