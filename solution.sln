@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28606.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimdJsonSharp.Tests", "tests\SimdJsonSharp.Tests.csproj", "{F9759A8C-96A7-4012-8EB6-3F34E89859B3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HelloWorld", "samples\HelloWorld\HelloWorld.csproj", "{E85B732E-8A68-4C53-82D2-8F4319A14BB9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6DD8E0E9-0838-4299-B9B0-E0B75830CCF0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{0EA09D21-043B-437C-83B5-B400D68DFBE0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{96B2940D-00A0-488F-B4F4-3936C689C2E2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimdJsonSharp", "src\SimdJsonSharp.csproj", "{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{53CBE9B1-22D6-4D6F-A78A-0D6FBA9ED000}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "benchmarks\Benchmarks.csproj", "{5783067E-D420-462E-943C-4CBA2D74121C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F9759A8C-96A7-4012-8EB6-3F34E89859B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9759A8C-96A7-4012-8EB6-3F34E89859B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9759A8C-96A7-4012-8EB6-3F34E89859B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9759A8C-96A7-4012-8EB6-3F34E89859B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E85B732E-8A68-4C53-82D2-8F4319A14BB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E85B732E-8A68-4C53-82D2-8F4319A14BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E85B732E-8A68-4C53-82D2-8F4319A14BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E85B732E-8A68-4C53-82D2-8F4319A14BB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5783067E-D420-462E-943C-4CBA2D74121C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5783067E-D420-462E-943C-4CBA2D74121C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5783067E-D420-462E-943C-4CBA2D74121C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5783067E-D420-462E-943C-4CBA2D74121C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F9759A8C-96A7-4012-8EB6-3F34E89859B3} = {96B2940D-00A0-488F-B4F4-3936C689C2E2}
+		{E85B732E-8A68-4C53-82D2-8F4319A14BB9} = {0EA09D21-043B-437C-83B5-B400D68DFBE0}
+		{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F} = {6DD8E0E9-0838-4299-B9B0-E0B75830CCF0}
+		{5783067E-D420-462E-943C-4CBA2D74121C} = {53CBE9B1-22D6-4D6F-A78A-0D6FBA9ED000}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1154050C-AA23-4D3A-80C0-923978F0E163}
+	EndGlobalSection
+EndGlobal
