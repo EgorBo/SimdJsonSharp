@@ -1,4 +1,4 @@
-## SimdJsonSharp
+# SimdJsonSharp: Parsing gigabytes of JSON per second
 C# version of Daniel Lemire's [SimdJson](https://github.com/lemire/simdjson) (ported from C by hands, I tried to keep the same format and API).
 Accelerated with `System.Runtime.Intrinsics` (e.g. [see here](https://github.com/EgorBo/SimdJsonSharp/blob/master/src/stage1_find_marks.cs)).
 
