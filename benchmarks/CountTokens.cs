@@ -6,13 +6,27 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 using Newtonsoft.Json;
 using SimdJsonSharp;
 
 namespace Benchmarks
 {
+    [Config(typeof(ConfigWithCustomEnvVars))]
     public class CountTokens
     {
+        private class ConfigWithCustomEnvVars : ManualConfig
+        {
+            private const string JitNoInline = "COMPlus_TieredCompilation";
+
+            public ConfigWithCustomEnvVars()
+            {
+                Add(Job.Core
+                    .With(new[] { new EnvironmentVariable(JitNoInline, "1") }));
+            }
+        }
+
         public IEnumerable<object[]> TestData()
         {
             string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -20,7 +34,8 @@ namespace Benchmarks
 
             testDataDir = @"C:\prj\simdjsonsharp\external\simdjson\jsonexamples"; // TODO: fix absolute path
 
-            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.TopDirectoryOnly).Take(5).ToArray();
+            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories);
+            files = new [] { @"C:\prj\simdjsonsharp\external\simdjson\jsonexamples\canada.json" };
 
             foreach (var file in files)
                 yield return new object[] {File.ReadAllBytes(file), Path.GetFileName(file)};
