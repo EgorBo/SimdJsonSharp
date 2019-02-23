@@ -6,12 +6,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using BenchmarkDotNet.Attributes;
+using Newtonsoft.Json;
 using SimdJsonSharp;
 
 namespace Benchmarks
 {
-    [IterationCount(5)]
-    [WarmupCount(5)]
     public class CountTokens
     {
         public IEnumerable<object[]> TestData()
@@ -60,6 +59,27 @@ namespace Benchmarks
                 if (reader.TokenType == JsonTokenType.Number)
                 {
                     numbersCount++;
+                }
+            }
+
+            return numbersCount;
+        }
+
+        [Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public ulong JsonNet(byte[] data, string fileName)
+        {
+            ulong numbersCount = 0;
+            using (var streamReader = new StreamReader(new MemoryStream(data)))
+            {
+                JsonTextReader reader = new JsonTextReader(streamReader);
+                while (reader.Read())
+                {
+                    if (reader.TokenType == JsonToken.Float ||
+                        reader.TokenType == JsonToken.Integer)
+                    {
+                        numbersCount++;
+                    }
                 }
             }
 
