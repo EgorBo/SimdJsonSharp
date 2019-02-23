@@ -85,5 +85,24 @@ namespace Benchmarks
 
             return numbersCount;
         }
+
+        [Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public ulong SpanJsonUtf8(byte[] data, string fileName)
+        {
+            ulong numbersCount = 0;
+            var reader = new SpanJson.JsonReader<byte>(data);
+            SpanJson.JsonToken token;
+            while ((token = reader.ReadUtf8NextToken()) != SpanJson.JsonToken.None)
+            {
+                if (token == SpanJson.JsonToken.Number)
+                {
+                    numbersCount++;
+                }
+                reader.SkipNextUtf8Value(token);
+            }
+
+            return numbersCount;
+        }
     }
 }
