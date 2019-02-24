@@ -1,10 +1,11 @@
 # SimdJsonSharp: Parsing gigabytes of JSON per second
-C# version of Daniel Lemire's [SimdJson](https://github.com/lemire/simdjson) (ported from C by hands, I tried to keep the same format and API).
-Accelerated with `System.Runtime.Intrinsics` (e.g. [see here](https://github.com/EgorBo/SimdJsonSharp/blob/master/src/stage1_find_marks.cs)).
+C# version of Daniel Lemire's [SimdJson](https://github.com/lemire/simdjson) fully ported from C to C#, 
+I tried to keep the same format and API). The library accelerates JSON parsing and minification using 
+SIMD instructions including AVX2 (C# version uses `System.Runtime.Intrinsics` API).
 
 ## Benchmarks
-The following [benchmark](https://github.com/EgorBo/SimdJsonSharp/blob/master/benchmarks/CountTokens.cs) compares `SimdJsonSharp` with .NET Core 3.0 `Utf8JsonReader` - open a file, 
-count tokens with type=number, close the file.
+The following [benchmark](https://github.com/EgorBo/SimdJsonSharp/blob/master/benchmarks/CountTokens.cs) compares `SimdJsonSharp` with .NET Core 3.0 `Utf8JsonReader`, `Json.NET` and `SpanJson` libraries.
+Test json files can be found [here](https://github.com/lemire/simdjson/tree/master/jsonexamples).
 
 ```
 |            Method |           fileName |    fileSize |         Mean | Ratio |
@@ -39,25 +40,43 @@ count tokens with type=number, close the file.
 |           JsonNet |   instruments.json |   220.35 Kb |    980.42 us |  3.80 |
 |      SpanJsonUtf8 |   instruments.json |   220.35 Kb |    409.47 us |  1.59 |
 |                   |                    |             |              |       |
-|          SimdJson |     marine_ik.json | 2,983.47 Kb |  8,510.30 us |  1.00 |
-|    Utf8JsonReader |     marine_ik.json | 2,983.47 Kb | 11,465.33 us |  1.35 |
-|           JsonNet |     marine_ik.json | 2,983.47 Kb | 32,113.43 us |  3.77 |
-|      SpanJsonUtf8 |     marine_ik.json | 2,983.47 Kb |  8,885.77 us |  1.04 |
-|                   |                    |             |              |       |
 |          SimdJson |      truenull.json |    12.00 Kb |  16,032.6 ns |  1.00 |
 |    Utf8JsonReader |      truenull.json |    12.00 Kb |  58,365.2 ns |  3.64 |
 |           JsonNet |      truenull.json |    12.00 Kb |  60,977.3 ns |  3.80 |
 |      SpanJsonUtf8 |      truenull.json |    12.00 Kb |  24,069.2 ns |  1.50 |
 ```
 
-Environment:
-```
-// * Summary *
+## Usage
+The C# API is not stable yet and currently fully copies the original C-style API
+thus it involves some `Unsafe` magic including pointers.
 
-BenchmarkDotNet=v0.11.4, OS=Windows 10.0.17134.590 (1803/April2018Update/Redstone4)
-Intel Core i7-8700K CPU 3.70GHz (Coffee Lake), 1 CPU, 12 logical and 6 physical cores
-Frequency=3609380 Hz, Resolution=277.0559 ns, Timer=TSC
-.NET Core SDK=3.0.100-preview4-010487
-  [Host] : .NET Core 3.0.0-preview3-27420-6 (CoreCLR 4.6.27415.73, CoreFX 4.7.19.11509), 64bit RyuJIT
-  Core   : .NET Core 3.0.0-preview3-27420-6 (CoreCLR 4.6.27415.73, CoreFX 4.7.19.11509), 64bit RyuJIT
+Add nuget package [SimdJsonSharp](https://www.nuget.org/packages/SimdJsonSharp) e.g. via CLI:
 ```
+dotnet add package SimdJsonSharp
+```
+
+The following sample parses a file and iterate numeric tokens
+```csharp
+byte[] bytes = File.ReadAllBytes(somefile);
+fixed (byte* ptr = bytes) // pin bytes while we are working on them
+using (ParsedJson doc = SimdJson.ParseJson(ptr, bytes.Length))
+using (var iterator = doc.CreateIterator())
+{
+    while (iterator.MoveForward())
+    {
+        if (iterator.GetTokenType() == JsonTokenType.Number)
+            Console.WriteLine("integer: " + iterator.GetInteger());
+    }
+}
+```
+As you can see the API looks similiar to `Utf8JsonReader` that was introduced recently in .NET Core 3.0
+
+Also it's possible to just validate JSON or minify it (remove whitespaces, etc):
+```csharp
+string someJson = ...;
+string minifiedJson = SimdJson.MinifyJson(someJson);
+```
+
+## Requirements
+* AVX2 enabled CPU 
+* .NET Core 3.0 (because of System.Runtime.Intrinsics)
