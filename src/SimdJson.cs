@@ -23,12 +23,6 @@ namespace SimdJsonSharp
 {
     public static unsafe class SimdJson
     {
-        public static ParsedJson ParseJson(ReadOnlySpan<byte> jsonData)
-        {
-            fixed (byte* dataPtr = jsonData)
-                return ParseJson(dataPtr, jsonData.Length);
-        }
-
         public static ParsedJson ParseJson(byte* jsonData, int length, bool reallocIfNeeded = true)
         {
             var pj = new ParsedJson();
@@ -40,9 +34,9 @@ namespace SimdJsonSharp
             return pj;
         }
 
-        public static ParsedJsonIterator ParseJsonAndOpenIterator(ReadOnlySpan<byte> jsonData)
+        public static ParsedJsonIterator ParseJsonAndOpenIterator(byte* jsonData, int length)
         {
-            var parsedJson = ParseJson(jsonData);
+            var parsedJson = ParseJson(jsonData, length);
             return new ParsedJsonIterator(parsedJson);
         }
 

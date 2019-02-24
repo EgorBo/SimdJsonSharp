@@ -8,7 +8,7 @@ namespace SimdJsonSharp.Tests
     public class ValidateTestFilesTests
     {
         [Fact]
-        public void ValidateAllFiles()
+        public unsafe void ValidateAllFiles()
         {
             string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string testDataDir = Path.Combine(currentDir, @"../../../../external/simdjson/jsonexamples");
@@ -18,11 +18,10 @@ namespace SimdJsonSharp.Tests
             Assert.NotEmpty(files);
             foreach (string file in files)
             {
-                ReadOnlySpan<byte> fileData = File.ReadAllBytes(file);
-                using (ParsedJson doc = SimdJson.ParseJson(fileData))
-                {
-                    Assert.True(doc.IsValid);
-                }
+                byte[] fileData = File.ReadAllBytes(file);
+                fixed (byte* ptr = fileData)
+                    using (ParsedJson doc = SimdJson.ParseJson(ptr, fileData.Length))
+                        Assert.True(doc.IsValid);
             }
         }
     }

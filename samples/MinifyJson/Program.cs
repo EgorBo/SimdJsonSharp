@@ -10,7 +10,7 @@ namespace MinifyJson
     {
         static void Main(string[] args)
         {
-            ReadOnlySpan<byte> beforeData = LoadEmbeddedFile("MinifyJson.simple.json");
+            ReadOnlySpan<byte> beforeData = LoadEmbeddedFile("MinifyJson.sample.json");
 
             string beforeString = Encoding.UTF8.GetString(beforeData);
             Console.WriteLine($"Before:\n{beforeString}\nLength={beforeString.Length}");

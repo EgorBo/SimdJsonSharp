@@ -7,11 +7,11 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="simple.json" />
+    <None Remove="sample.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="simple.json" />
+    <EmbeddedResource Include="sample.json" />
   </ItemGroup>
 
   <ItemGroup>

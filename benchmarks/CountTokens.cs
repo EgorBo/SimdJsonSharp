@@ -13,8 +13,9 @@ namespace Benchmarks
         public unsafe ulong _SimdJson(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
-            using (ParsedJson doc = SimdJson.ParseJson(data))
+            fixed (byte* dataPtr = data)
             {
+                using (ParsedJson doc = SimdJson.ParseJson(dataPtr, data.Length))
                 using (var iterator = new ParsedJsonIterator(doc))
                 {
                     while (iterator.MoveForward())

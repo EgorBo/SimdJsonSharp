@@ -5,9 +5,21 @@
     <LangVersion>latest</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>JSON_MINIFY</DefineConstants>
+    <Authors>EgorBo</Authors>
+    <Description>SimdJson: Parsing gigabytes of JSON per second.
+C# version of Daniel Lemire's SimdJson (written in C).
+</Description>
+    <PackageLicenseUrl>https://github.com/EgorBo/SimdJsonSharp/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/EgorBo/SimdJsonSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/EgorBo/SimdJsonSharp</RepositoryUrl>
+    <PackageTags>simd,json,avx,avx2,sse,ssse3,parsing,minify</PackageTags>
+    <Copyright>(c) lemire, EgorBo</Copyright>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageIconUrl>..\images\logo.png</PackageIconUrl>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0-preview.19073.11" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
   </ItemGroup>
 </Project>

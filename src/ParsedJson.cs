@@ -5,6 +5,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.X86;
 
 #region stdint types and friends
 // if you change something here please change it in other files too
@@ -36,6 +37,12 @@ namespace SimdJsonSharp
         public uint8_t* string_buf; // should be at least bytecapacity
         public uint8_t* current_string_buf_loc;
         public bool isvalid;
+
+        public ParsedJson()
+        {
+            if (!Avx2.IsSupported)
+                throw new NotSupportedException("AVX2 is required form SimdJson");
+        }
 
         // if needed, allocate memory so that the object is able to process JSON
         // documents having up to len butes and maxdepth "depth"
@@ -169,7 +176,7 @@ namespace SimdJsonSharp
         {
             WriteTape(0, (uint8_t) 'd');
             //static_assert(sizeof(d) == sizeof(tape[current_loc]), "mismatch size");
-            Utils.memcpy(&tape[current_loc++], &d, sizeof(double));
+            memcpy(&tape[current_loc++], &d, sizeof(double));
             //tape[current_loc++] = *((uint64_t *)&d);
         }
 
@@ -178,7 +185,7 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AnnotatePreviousLoc(uint32_t saved_loc, uint64_t val) => tape[saved_loc] |= val;
 
-        public ParsedJsonIterator OpenIterator() => new ParsedJsonIterator(this);
+        public ParsedJsonIterator CreateIterator() => new ParsedJsonIterator(this);
     }
 
     internal struct scopeindex_t

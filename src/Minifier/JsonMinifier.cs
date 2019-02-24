@@ -32,7 +32,7 @@ namespace SimdJsonSharp
         }
 
         //C#: copied from immintrin.h:
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector256<ulong> _mm256_loadu2_m128i(ulong* hiaddr, ulong* loaddr)
         {
             var hhi = Sse2.LoadVector128(hiaddr);
@@ -40,7 +40,6 @@ namespace SimdJsonSharp
             var casted = llo.ToVector256();
             return Avx.InsertVector128(casted, hhi, 0x1);
         }
-
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void _mm256_storeu2_m128i(byte* hiaddr, byte* loaddr, Vector256<byte> a)
@@ -69,6 +68,9 @@ namespace SimdJsonSharp
         // the same, result is null terminated, return the string length (minus the null termination)
         public static size_t Minify(uint8_t* buf, size_t len, uint8_t* @out)
         {
+            if (!Avx2.IsSupported)
+                throw new NotSupportedException("AVX2 is required form SimdJson");
+
             //C#: load const vectors once (there is no `const _m256` in C#)
             Vector256<byte> lut_cntrl = s_lut_cntrl;
             Vector256<byte> low_nibble_mask = s_low_nibble_mask;

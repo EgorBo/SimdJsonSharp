@@ -19,15 +19,18 @@ namespace Benchmarks
 
         [Benchmark]
         [ArgumentsSource(nameof(TestData))]
-        public string _SimdJson(byte[] jsonData, string fileName, string fileSize)
+        public unsafe string _SimdJson(byte[] jsonData, string fileName, string fileSize)
         {
             string json = Encoding.UTF8.GetString(jsonData);
-            
+
             // Validate json first
             // this step is not required for minification, it's here because JSON.NET also does validation
-            using (var doc = SimdJson.ParseJson(jsonData))
-                if (!doc.IsValid)
-                    throw new InvalidOperationException("Json is invalid");
+            fixed (byte* dataPtr = jsonData)
+            {
+                using (var doc = SimdJson.ParseJson(dataPtr, jsonData.Length))
+                    if (!doc.IsValid)
+                        throw new InvalidOperationException("Json is invalid");
+            }
 
             return SimdJson.MinifyJson(json);
         }

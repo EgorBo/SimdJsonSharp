@@ -21,7 +21,7 @@ namespace SimdJsonSharp.Tests
         }
 
         [Fact]
-        public void ValidateMinimizedJson()
+        public unsafe void ValidateMinimizedJson()
         {
             string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string testDataDir = Path.Combine(currentDir, @"../../../../external/simdjson/jsonexamples");
@@ -34,11 +34,11 @@ namespace SimdJsonSharp.Tests
                 ReadOnlySpan<byte> fileData = File.ReadAllBytes(file);
                 Span<byte> output = new byte[fileData.Length];
                 SimdJson.MinifyJson(fileData, output, out int bytesWritten);
+                output = output.Slice(0, bytesWritten);
 
-                using (ParsedJson doc = SimdJson.ParseJson(output.Slice(0, bytesWritten)))
-                {
-                    Assert.True(doc.IsValid);
-                }
+                fixed (byte* outPtr = output)
+                    using (ParsedJson doc = SimdJson.ParseJson(outPtr, output.Length))
+                        Assert.True(doc.IsValid);
             }
         }
     }
