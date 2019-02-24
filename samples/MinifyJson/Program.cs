@@ -8,14 +8,14 @@ namespace MinifyJson
 {
     class Program
     {
-        static unsafe void Main(string[] args)
+        static void Main(string[] args)
         {
             ReadOnlySpan<byte> beforeData = LoadEmbeddedFile("MinifyJson.simple.json");
 
             string beforeString = Encoding.UTF8.GetString(beforeData);
             Console.WriteLine($"Before:\n{beforeString}\nLength={beforeString.Length}");
 
-            string afterString = JsonMinifier.Minify(beforeString);
+            string afterString = SimdJson.MinifyJson(beforeString); // there is also Span API
             Console.WriteLine($"\n\nAfter:\n{afterString}.\nLength={afterString.Length}");
         }
 

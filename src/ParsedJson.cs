@@ -21,7 +21,7 @@ using static SimdJsonSharp.Utils;
 
 namespace SimdJsonSharp
 {
-    public unsafe struct ParsedJson : IDisposable
+    public unsafe class ParsedJson : IDisposable
     {
         public size_t bytecapacity; // indicates how many bits are meant to be supported 
         public size_t depthcapacity; // how deep we can go
@@ -39,7 +39,6 @@ namespace SimdJsonSharp
 
         // if needed, allocate memory so that the object is able to process JSON
         // documents having up to len butes and maxdepth "depth"
-        //WARN_UNUSED
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool AllocateCapacity(size_t len, size_t maxdepth = DEFAULTMAXDEPTH)
         {
@@ -70,12 +69,7 @@ namespace SimdJsonSharp
             if ((string_buf == null) || (tape == null) ||
                 (containing_scope_offset == null) || (ret_address == null) || (structural_indexes == null))
             {
-                Debug.WriteLine("Could not allocate memory");
-                if (ret_address != null) Utils.delete(ret_address);
-                if (containing_scope_offset != null) Utils.delete(containing_scope_offset);
-                if (tape != null) Utils.delete(tape);
-                if (string_buf != null) Utils.delete(string_buf);
-                if (structural_indexes != null) Utils.delete(structural_indexes);
+                Deallocate();
                 return false;
             }
 
@@ -88,21 +82,48 @@ namespace SimdJsonSharp
 
         private void Deallocate()
         {
+            isvalid = false;
             bytecapacity = 0;
             depthcapacity = 0;
             tapecapacity = 0;
             stringcapacity = 0;
-            if (ret_address != null) Utils.delete(ret_address);
-            if (containing_scope_offset != null) Utils.delete(containing_scope_offset);
-            if (tape != null) Utils.delete(tape);
-            if (string_buf != null) Utils.delete(string_buf);
-            if (structural_indexes != null) Utils.delete(structural_indexes);
-            isvalid = false;
+
+            if (ret_address != null)
+            {
+                delete(ret_address);
+                ret_address = null;
+            }
+
+            if (containing_scope_offset != null)
+            {
+                delete(containing_scope_offset);
+                containing_scope_offset = null;
+            }
+
+            if (tape != null)
+            {
+                delete(tape);
+                tape = null;
+            }
+
+            if (string_buf != null)
+            {
+                delete(string_buf);
+                string_buf = null;
+            }
+
+            if (structural_indexes != null)
+            {
+                delete(structural_indexes);
+                structural_indexes = null;
+            }
         }
 
-        public void Dispose()
+        public void Dispose() => Deallocate();
+
+        ~ParsedJson()
         {
-            Deallocate();
+            Dispose();
         }
 
         public bool IsValid => isvalid;
@@ -137,7 +158,7 @@ namespace SimdJsonSharp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteTapeS64(int64_t i)
+        public void WriteTapeInt64(int64_t i)
         {
             WriteTape(0, (uint8_t) 'l');
             tape[current_loc++] = *((uint64_t*) &i);
@@ -155,13 +176,12 @@ namespace SimdJsonSharp
         public uint32_t CurrentLoc => current_loc;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AnnotatePreviousLoc(uint32_t saved_loc, uint64_t val)
-        {
-            tape[saved_loc] |= val;
-        }
+        public void AnnotatePreviousLoc(uint32_t saved_loc, uint64_t val) => tape[saved_loc] |= val;
+
+        public ParsedJsonIterator OpenIterator() => new ParsedJsonIterator(this);
     }
 
-    public struct scopeindex_t
+    internal struct scopeindex_t
     {
         public size_t start_of_scope;
         public uint8_t scope_type;

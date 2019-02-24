@@ -171,7 +171,7 @@ namespace SimdJsonSharp
         //
         // Note: a redesign could avoid this function entirely.
         //
-        private static bool parse_float(uint8_t* buf, ParsedJson* pj, uint32_t offset, bool found_minus)
+        private static bool parse_float(uint8_t* buf, ParsedJson pj, uint32_t offset, bool found_minus)
         {
             bytechar* p = (bytechar*) (buf + offset);
             bool negative = false;
@@ -303,7 +303,7 @@ namespace SimdJsonSharp
             }
 
             double d = negative ? -i : i;
-            pj->WriteTapeDouble(d);
+            pj.WriteTapeDouble(d);
 #if JSON_TEST_NUMBERS // for unit testing
             foundFloat(d, buf + offset);
 #endif
@@ -318,7 +318,7 @@ namespace SimdJsonSharp
         //
         // This function will almost never be called!!!
         //
-        static bool parse_large_integer(uint8_t* buf, ParsedJson* pj, uint32_t offset, bool found_minus)
+        static bool parse_large_integer(uint8_t* buf, ParsedJson pj, uint32_t offset, bool found_minus)
         {
             bytechar* p = (bytechar*) (buf + offset);
             bool negative = false;
@@ -389,7 +389,7 @@ namespace SimdJsonSharp
             }
 
             int64_t signed_answer = negative ? -(int64_t) i : (int64_t) i;
-            pj->WriteTapeS64(signed_answer);
+            pj.WriteTapeInt64(signed_answer);
 #if JSON_TEST_NUMBERS // for unit testing
             foundInteger(signed_answer, buf + offset);
 #endif
@@ -397,7 +397,7 @@ namespace SimdJsonSharp
         }
 
 
-        public static bool parse_number(uint8_t* buf, ParsedJson* pj, uint32_t offset, bool found_minus)
+        public static bool parse_number(uint8_t* buf, ParsedJson pj, uint32_t offset, bool found_minus)
         {
             bytechar* p = (bytechar*) (buf + offset);
             bool negative = false;
@@ -571,7 +571,7 @@ namespace SimdJsonSharp
                 //////////
                 if (i == 0)
                 {
-                    pj->WriteTapeDouble(0.0);
+                    pj.WriteTapeDouble(0.0);
 #if JSON_TEST_NUMBERS // for unit testing
                     foundFloat(0.0, buf + offset);
 #endif
@@ -590,7 +590,7 @@ namespace SimdJsonSharp
                     double d = i;
                     d *= power_of_ten[308 + exponent];
                     // d = negative ? -d : d;
-                    pj->WriteTapeDouble(d);
+                    pj.WriteTapeDouble(d);
 #if JSON_TEST_NUMBERS // for unit testing
                     foundFloat(d, buf + offset);
 #endif
@@ -605,7 +605,7 @@ namespace SimdJsonSharp
                         found_minus);
                 }
 
-                pj->WriteTapeS64(i);
+                pj.WriteTapeInt64(i);
 #if JSON_TEST_NUMBERS // for unit testing
                 foundInteger(i, buf + offset);
 #endif

@@ -26,11 +26,13 @@ namespace SimdJsonSharp
         private uint8_t current_type;
         private uint64_t current_val;
         private scopeindex_t* depthindex;
-        private ParsedJson* pj;
+        private ParsedJson pj;
 
-        public ParsedJsonIterator(ParsedJson* pj)
+        public ParsedJson ParsedJson => pj;
+
+        public ParsedJsonIterator(ParsedJson parsedJson)
         {
-            this.pj = pj;
+            pj = parsedJson;
             depth = 0;
             location = 0;
             tape_length = 0;
@@ -38,16 +40,16 @@ namespace SimdJsonSharp
             current_type = 0;
             current_val = 0;
 
-            if (pj->IsValid)
+            if (pj.IsValid)
             {
-                depthindex = allocate<scopeindex_t>(pj->depthcapacity);
+                depthindex = allocate<scopeindex_t>(pj.depthcapacity);
                 if (depthindex == null)
                 {
                     return;
                 }
 
                 depthindex[0].start_of_scope = location;
-                current_val = pj->tape[location++];
+                current_val = pj.tape[location++];
                 current_type = (uint8_t)(current_val >> 56);
                 depthindex[0].scope_type = current_type;
                 if (current_type == 'r')
@@ -55,7 +57,7 @@ namespace SimdJsonSharp
                     tape_length = current_val & JSONVALUEMASK;
                     if (location < tape_length)
                     {
-                        current_val = pj->tape[location];
+                        current_val = pj.tape[location];
                         current_type = (uint8_t)(current_val >> 56);
                         depth++;
                         depthindex[depth].start_of_scope = location;
@@ -101,7 +103,7 @@ namespace SimdJsonSharp
             }
 
             location = location + 1;
-            current_val = pj->tape[location];
+            current_val = pj.tape[location];
             current_type = (uint8_t)(current_val >> 56);
             // if we encounter a scope closure, we need to move up
             while ((current_type == ']') || (current_type == '}'))
@@ -118,7 +120,7 @@ namespace SimdJsonSharp
                 }
 
                 location = location + 1;
-                current_val = pj->tape[location];
+                current_val = pj.tape[location];
                 current_type = (uint8_t)(current_val >> 56);
             }
 
@@ -132,7 +134,7 @@ namespace SimdJsonSharp
         public int64_t GetInteger()
         {
             if (location + 1 >= tape_length) return 0; // default value in case of error
-            return (int64_t)pj->tape[location + 1];
+            return (int64_t)pj.tape[location + 1];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -142,7 +144,7 @@ namespace SimdJsonSharp
         {
             if (location + 1 >= tape_length) return double.NaN; // default value in case of error
             double answer;
-            Utils.memcpy(&answer, &pj->tape[location + 1], sizeof(double));
+            Utils.memcpy(&answer, &pj.tape[location + 1], sizeof(double));
             return answer;
         }
 
@@ -186,7 +188,7 @@ namespace SimdJsonSharp
         // return value is valid UTF-8
         public bytechar* GetUtf8String()
         {
-            return (bytechar*)(pj->string_buf + (current_val & JSONVALUEMASK));
+            return (bytechar*)(pj.string_buf + (current_val & JSONVALUEMASK));
         }
 
         // throughout return true if we can do the navigation, false
@@ -208,7 +210,7 @@ namespace SimdJsonSharp
                     return false; // shoud never happen unless at the root
                 }
 
-                uint64_t nextval = pj->tape[npos];
+                uint64_t nextval = pj.tape[npos];
                 uint8_t nexttype = (uint8_t)(nextval >> 56);
                 if ((nexttype == ']') || (nexttype == '}'))
                 {
@@ -224,7 +226,7 @@ namespace SimdJsonSharp
             {
                 size_t increment = (size_t)((current_type == 'd' || current_type == 'l') ? 2 : 1);
                 if (location + increment >= tape_length) return false;
-                uint64_t nextval = pj->tape[location + increment];
+                uint64_t nextval = pj.tape[location + increment];
                 uint8_t nexttype = (uint8_t)(nextval >> 56);
                 if ((nexttype == ']') || (nexttype == '}'))
                 {
@@ -248,7 +250,7 @@ namespace SimdJsonSharp
         {
             if (location - 1 < depthindex[depth].start_of_scope) return false;
             location -= 1;
-            current_val = pj->tape[location];
+            current_val = pj.tape[location];
             current_type = (uint8_t)(current_val >> 56);
             if ((current_type == ']') || (current_type == '}'))
             {
@@ -260,7 +262,7 @@ namespace SimdJsonSharp
                 }
 
                 location = new_location;
-                current_val = pj->tape[location];
+                current_val = pj.tape[location];
                 current_type = (uint8_t)(current_val >> 56);
             }
 
@@ -283,7 +285,7 @@ namespace SimdJsonSharp
             // next we just move to the previous value
             depth--;
             location -= 1;
-            current_val = pj->tape[location];
+            current_val = pj.tape[location];
             current_type = (uint8_t)(current_val >> 56);
             return true;
         }
@@ -308,7 +310,7 @@ namespace SimdJsonSharp
                 location = location + 1;
                 depthindex[depth].start_of_scope = location;
                 depthindex[depth].scope_type = current_type;
-                current_val = pj->tape[location];
+                current_val = pj.tape[location];
                 current_type = (uint8_t)(current_val >> 56);
                 return true;
             }
@@ -321,7 +323,7 @@ namespace SimdJsonSharp
         public void ToStartScope()
         {
             location = depthindex[depth].start_of_scope;
-            current_val = pj->tape[location];
+            current_val = pj.tape[location];
             current_type = (uint8_t)(current_val >> 56);
         }
 
@@ -329,8 +331,14 @@ namespace SimdJsonSharp
         {
             if (depthindex != null)
             {
-                Utils.delete(depthindex);
+                delete(depthindex);
                 depthindex = null;
+            }
+
+            if (pj != null)
+            {
+                pj.Dispose();
+                pj = null;
             }
         }
 

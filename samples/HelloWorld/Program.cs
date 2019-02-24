@@ -9,16 +9,16 @@ namespace ConsoleApp124
     {
         static unsafe void Main(string[] args)
         {
-            string helloWorldJson = "{ \"answer\": 42, \"name\": \"Egor\" }";
+            string helloWorldJson = @"{ ""answer"": 42, ""name"": ""Egor"" }";
             ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(helloWorldJson);
             // SimdJson is UTF8 only
 
-            using (ParsedJson doc = SimdJson.BuildParsedJson(bytes))
+            using (ParsedJson doc = SimdJson.ParseJson(bytes))
             {
-                Console.WriteLine("Is json valid:" + doc.IsValid);
+                Console.WriteLine($"Is json valid:{doc.IsValid}\n");
                 
                 // open iterator:
-                using (var iterator = new ParsedJsonIterator(&doc))
+                using (var iterator = new ParsedJsonIterator(doc))
                 {
                     while (iterator.MoveForward())
                     {

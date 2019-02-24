@@ -81,14 +81,14 @@ namespace SimdJsonSharp
             return offset > 0;
         }
 
-        public static bool parse_string(uint8_t* buf, size_t len, ParsedJson* pj, uint32_t depth, uint32_t offset)
+        public static bool parse_string(uint8_t* buf, size_t len, ParsedJson pj, uint32_t depth, uint32_t offset)
         {
 #if SIMDJSON_SKIPSTRINGPARSING // for performance analysis, it is sometimes useful to skip parsing
-            pj->write_tape(0, '"');// don't bother with the string parsing at all
+            pj.write_tape(0, '"');// don't bother with the string parsing at all
             return true; // always succeeds
 #else
             uint8_t* src = &buf[offset + 1]; // we know that buf at offset is a "
-            uint8_t* dst = pj->current_string_buf_loc;
+            uint8_t* dst = pj.current_string_buf_loc;
 #if JSON_TEST_STRINGS // for unit testing
             uint8_t *const start_of_string = dst;
 #endif
@@ -123,21 +123,21 @@ namespace SimdJsonSharp
                     // we encountered quotes first. Move dst to point to quotes and exit
                     dst[quote_dist] = 0; // null terminate and get out
 
-                    pj->WriteTape((size_t) pj->current_string_buf_loc - (size_t) pj->string_buf, (uint8_t) '"');
+                    pj.WriteTape((size_t) pj.current_string_buf_loc - (size_t) pj.string_buf, (uint8_t) '"');
 
-                    pj->current_string_buf_loc = dst + quote_dist + 1; // the +1 is due to the 0 value
+                    pj.current_string_buf_loc = dst + quote_dist + 1; // the +1 is due to the 0 value
 #if CHECKUNESCAPED
                     // check that there is no unescaped char before the quote
                     uint32_t unescaped_bits = (uint32_t) Avx2.MoveMask(unescaped_vec);
                     bool is_ok = ((quote_bits - 1) & (~quote_bits) & unescaped_bits) == 0;
 #if JSON_TEST_STRINGS // for unit testing
-                    if (is_ok) foundString(buf + offset, start_of_string, pj->current_string_buf_loc - 1);
+                    if (is_ok) foundString(buf + offset, start_of_string, pj.current_string_buf_loc - 1);
                     else foundBadString(buf + offset);
 #endif // JSON_TEST_STRINGS
                     return is_ok;
 #else //CHECKUNESCAPED
 #if JSON_TEST_STRINGS // for unit testing
-                    foundString(buf + offset, start_of_string, pj->current_string_buf_loc - 1);
+                    foundString(buf + offset, start_of_string, pj.current_string_buf_loc - 1);
 #endif // JSON_TEST_STRINGS
                     return true;
 #endif //CHECKUNESCAPED

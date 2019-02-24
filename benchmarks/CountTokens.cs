@@ -1,61 +1,21 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+﻿using System.IO;
 using System.Text.Json;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Jobs;
 using Newtonsoft.Json;
 using SimdJsonSharp;
 
 namespace Benchmarks
 {
-    [Config(typeof(ConfigWithCustomEnvVars))]
-    public class CountTokens
+    public class CountTokens : BenchmarksBase
     {
-        private class ConfigWithCustomEnvVars : ManualConfig
-        {
-            private const string JitNoInline = "COMPlus_TieredCompilation";
-
-            public ConfigWithCustomEnvVars()
-            {
-                Add(Job.Core.With(new[] { new EnvironmentVariable(JitNoInline, "1") }));
-            }
-        }
-
-        public IEnumerable<object[]> TestData()
-        {
-            string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string testDataDir = Path.Combine(currentDir, @"../../../../external/simdjson/jsonexamples");
-
-            testDataDir = @"C:\prj\simdjsonsharp\external\simdjson\jsonexamples"; // TODO: fix absolute path
-
-            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories).Take(7).ToArray();
-
-            foreach (var file in files)
-            {
-                byte[] bytes = File.ReadAllBytes(file);
-                yield return new object[]
-                    {
-                        bytes,
-                        Path.GetFileName(file),
-                        Math.Round(bytes.Length / 1000.0, 2).ToString("N") + " Kb"
-                    };
-            }
-        }
-
-
         [Benchmark(Baseline = true)]
         [ArgumentsSource(nameof(TestData))]
-        public unsafe ulong SimdJsonSharpApi(byte[] data, string fileName, string fileSize)
+        public unsafe ulong _SimdJson(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
-            using (ParsedJson doc = SimdJson.BuildParsedJson(data))
+            using (ParsedJson doc = SimdJson.ParseJson(data))
             {
-                using (var iterator = new ParsedJsonIterator(&doc))
+                using (var iterator = new ParsedJsonIterator(doc))
                 {
                     while (iterator.MoveForward())
                     {
@@ -72,7 +32,7 @@ namespace Benchmarks
 
         [Benchmark]
         [ArgumentsSource(nameof(TestData))]
-        public unsafe ulong Utf8JsonReaderApi(byte[] data, string fileName, string fileSize)
+        public ulong _Utf8JsonReader(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
             var reader = new Utf8JsonReader(data, true, default);

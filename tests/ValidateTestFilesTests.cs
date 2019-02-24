@@ -19,7 +19,7 @@ namespace SimdJsonSharp.Tests
             foreach (string file in files)
             {
                 ReadOnlySpan<byte> fileData = File.ReadAllBytes(file);
-                using (ParsedJson doc = SimdJson.BuildParsedJson(fileData))
+                using (ParsedJson doc = SimdJson.ParseJson(fileData))
                 {
                     Assert.True(doc.IsValid);
                 }

@@ -6,7 +6,7 @@ namespace Benchmarks
     {
         public static void Main()
         {
-            BenchmarkRunner.Run<CountTokens>();
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run();
         }
     }
 }

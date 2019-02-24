@@ -2,8 +2,9 @@
 // (c) Daniel Lemire
 
 using System;
-using System.Diagnostics;
+using System.Buffers;
 using System.Runtime.InteropServices;
+using System.Text;
 
 #region stdint types and friends
 // if you change something here please change it in other files too
@@ -22,47 +23,91 @@ namespace SimdJsonSharp
 {
     public static unsafe class SimdJson
     {
-        private static readonly long pagesize = System.Environment.SystemPageSize;
-
-        public static ParsedJson BuildParsedJson(ReadOnlySpan<byte> jsonData)
+        public static ParsedJson ParseJson(ReadOnlySpan<byte> jsonData)
         {
             fixed (byte* dataPtr = jsonData)
-                return BuildParsedJson(dataPtr, (ulong)jsonData.Length);
+                return ParseJson(dataPtr, jsonData.Length);
         }
 
-        public static ParsedJson BuildParsedJson(uint8_t* jsonData, size_t length, bool reallocIfNeeded = true)
+        public static ParsedJson ParseJson(byte* jsonData, int length, bool reallocIfNeeded = true)
         {
-            ParsedJson pj = new ParsedJson();
-            bool ok = pj.AllocateCapacity(length);
+            var pj = new ParsedJson();
+            bool ok = pj.AllocateCapacity((ulong)length);
             if (ok)
-            {
-                ok = JsonParse(jsonData, length, &pj, reallocIfNeeded);
-            }
+                JsonParse(jsonData, (ulong)length, pj, reallocIfNeeded);
             else
-            {
                 throw new InvalidOperationException("failure during memory allocation");
-            }
             return pj;
         }
 
-        public static bool JsonParse(uint8_t* jsonData, size_t length, ParsedJson* pj, bool reallocIfNeeded = true)
+        public static ParsedJsonIterator ParseJsonAndOpenIterator(ReadOnlySpan<byte> jsonData)
         {
-            if (pj->bytecapacity < length)
+            var parsedJson = ParseJson(jsonData);
+            return new ParsedJsonIterator(parsedJson);
+        }
+
+        public static string MinifyJson(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            ReadOnlySpan<byte> inputBytes = Encoding.UTF8.GetBytes(input);
+            var length = inputBytes.Length;
+            byte[] pool = null;
+
+            try
             {
-                Debug.WriteLine("Your ParsedJson cannot support documents that big: " + length);
-                return false;
+                Span<byte> span = length <= 2048 ?
+                    stackalloc byte[2048] :
+                    (pool = ArrayPool<byte>.Shared.Rent(length));
+
+                MinifyJson(inputBytes, span, out int bytesWritten);
+                return Encoding.UTF8.GetString(span.Slice(0, bytesWritten));
             }
+            finally
+            {
+                if (pool != null)
+                    ArrayPool<byte>.Shared.Return(pool);
+            }
+        }
+
+        public static void MinifyJson(ReadOnlySpan<byte> input, Span<byte> output, out int bytesWritten)
+        {
+            if ((uint)input.Length < 1)
+            {
+                bytesWritten = 0;
+                return;
+            }
+
+            if ((uint)output.Length < 1)
+                throw new ArgumentException("Output is empty");
+
+            //TODO: how to validate output length?
+
+            fixed (byte* inputPtr = input)
+            fixed (byte* outputPtr = output)
+            {
+                bytesWritten = (int)JsonMinifier.Minify(inputPtr, (ulong)input.Length, outputPtr);
+            }
+        }
+
+        private static readonly long pagesize = Environment.SystemPageSize;
+
+        internal static bool JsonParse(uint8_t* jsonData, size_t length, ParsedJson pj, bool reallocIfNeeded = true)
+        {
+            if (pj.bytecapacity < length)
+                throw new InvalidOperationException("Your ParsedJson cannot support documents that big: " + length);
+
             bool reallocated = false;
             if (reallocIfNeeded)
             {
                 // realloc is needed if the end of the memory crosses a page
-
-                if (((size_t)(jsonData + length - 1) % (size_t)pagesize) < SIMDJSON_PADDING)
+                if ((size_t)(jsonData + length - 1) % (size_t)pagesize < SIMDJSON_PADDING)
                 {
                     uint8_t* tmpbuf = jsonData;
-                    jsonData = (uint8_t*)Utils.allocate_padded_buffer(length);
+                    jsonData = (uint8_t*)allocate_padded_buffer(length);
                     if (jsonData == null) return false;
-                    memcpy((void*)jsonData, tmpbuf, length);
+                    memcpy(jsonData, tmpbuf, length);
                     reallocated = true;
                 }
             }
@@ -73,10 +118,10 @@ namespace SimdJsonSharp
             }
             else
             {
-                if (reallocated) Utils.free((void*)jsonData);
+                if (reallocated) free(jsonData);
                 return false;
             }
-            if (reallocated) Utils.free((void*)jsonData);
+            if (reallocated) free(jsonData);
             return isok;
         }
     }

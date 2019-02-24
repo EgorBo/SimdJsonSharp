@@ -2,7 +2,6 @@
 // (c) Daniel Lemire
 
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -29,7 +28,7 @@ namespace SimdJsonSharp
         // a straightforward comparison of a mask against input. 5 uops; would be
         // cheaper in AVX512.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint64_t cmp_mask_against_input(
+        internal static uint64_t cmp_mask_against_input(
             Vector256<byte> input_lo,
             Vector256<byte> input_hi,
             Vector256<byte> mask)
@@ -52,16 +51,16 @@ namespace SimdJsonSharp
             (byte)8, 0, 18, 4, 0, 1, 0, 1, 0, 0, 0, 3, 2, 1, 0, 0, 8, 0, 18, 4, 0, 1, 0,
             1, 0, 0, 0, 3, 2, 1, 0, 0);
 
-        public static bool find_structural_bits(uint8_t* buf, size_t len, ParsedJson* pj)
+        internal static bool find_structural_bits(uint8_t* buf, size_t len, ParsedJson pj)
         {
-            if (len > pj->bytecapacity)
+            if (len > pj.bytecapacity)
             {
-                Console.WriteLine("Your ParsedJson object only supports documents up to " + pj->bytecapacity +
+                Console.WriteLine("Your ParsedJson object only supports documents up to " + pj.bytecapacity +
                                   " bytes but you are trying to process " + len + " bytes\n");
                 return false;
             }
 
-            uint32_t* base_ptr = pj->structural_indexes;
+            uint32_t* base_ptr = pj.structural_indexes;
             uint32_t @base = 0;
 
             const uint64_t even_bits = 0x5555555555555555UL;
@@ -231,7 +230,7 @@ namespace SimdJsonSharp
 
                 //Console.WriteLine($"Iter: {idx}, satur: {structurals}");
 
-                //*(uint64_t *)(pj->structurals + idx / 8) = structurals;
+                //*(uint64_t *)(pj.structurals + idx / 8) = structurals;
             }
 
             ////////////////
@@ -384,7 +383,7 @@ namespace SimdJsonSharp
                 // now, we've used our close quotes all we need to. So let's switch them off
                 // they will be off in the quote mask and on in quote bits.
                 structurals &= ~(quote_bits & ~quote_mask);
-                //*(uint64_t *)(pj->structurals + idx / 8) = structurals;
+                //*(uint64_t *)(pj.structurals + idx / 8) = structurals;
                 idx += 64;
             }
             uint32_t cnt2 = (uint32_t)hamming(structurals);
@@ -411,17 +410,17 @@ namespace SimdJsonSharp
             }
             @base = next_base2;
 
-            pj->n_structural_indexes = @base;
-            if (base_ptr[pj->n_structural_indexes - 1] > len)
+            pj.n_structural_indexes = @base;
+            if (base_ptr[pj.n_structural_indexes - 1] > len)
             {
                 throw new InvalidOperationException("Internal bug");
             }
-            if (len != base_ptr[pj->n_structural_indexes - 1])
+            if (len != base_ptr[pj.n_structural_indexes - 1])
             {
                 // the string might not be NULL terminated, but we add a virtual NULL ending character. 
-                base_ptr[pj->n_structural_indexes++] = (uint32_t)len;
+                base_ptr[pj.n_structural_indexes++] = (uint32_t)len;
             }
-            base_ptr[pj->n_structural_indexes] = 0; // make it safe to dereference one beyond this array
+            base_ptr[pj.n_structural_indexes] = 0; // make it safe to dereference one beyond this array
 
             return true;
         }

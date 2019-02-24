@@ -29,7 +29,7 @@ namespace SimdJsonSharp
     internal static unsafe class stage2_build_tape
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static bool is_valid_true_atom(uint8_t* loc)
+        internal static bool is_valid_true_atom(uint8_t* loc)
         {
             uint64_t tv = 2314885531981673076; //* (uint64_t*)"true    ";
             uint64_t mask4 = 0x00000000ffffffff;
@@ -42,7 +42,7 @@ namespace SimdJsonSharp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static bool is_valid_false_atom(uint8_t* loc)
+        internal static bool is_valid_false_atom(uint8_t* loc)
         {
             uint64_t fv = 2314885828568703334; //* (uint64_t*)"false   ";
             uint64_t mask5 = 0x000000ffffffffff;
@@ -55,7 +55,7 @@ namespace SimdJsonSharp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static bool is_valid_null_atom(uint8_t* loc)
+        internal static bool is_valid_null_atom(uint8_t* loc)
         {
             uint64_t nv = 2314885532098524526; //* (uint64_t*)"null    ";
             uint64_t mask4 = 0x00000000ffffffff;
@@ -67,15 +67,15 @@ namespace SimdJsonSharp
             return error == 0;
         }
 
-        public static bool unified_machine(uint8_t* buf, size_t len, ParsedJson* pj)
+        internal static bool unified_machine(uint8_t* buf, size_t len, ParsedJson pj)
         {
             uint32_t i = 0; // index of the structural character (0,1,2,3...)
             uint32_t idx; // location of the structural character in the input (buf)
             uint8_t c; // used to track the (structural) character we are looking at, updated
             // by UPDATE_CHAR macro
             uint32_t depth = 0; // could have an arbitrary starting depth
-            pj->Init();
-            if (pj->bytecapacity < len)
+            pj.Init();
+            if (pj.bytecapacity < len)
             {
                 Debug.Write("insufficient capacity\n");
                 return false;
@@ -85,48 +85,48 @@ namespace SimdJsonSharp
             //C#: expanded directly everywhere
             //void UPDATE_CHAR()
             //{
-            //    idx = pj->structural_indexes[i++];
+            //    idx = pj.structural_indexes[i++];
             //    c = buf[idx];
             //}
 
-            pj->ret_address[depth] = (bytechar) 's';
-            pj->containing_scope_offset[depth] = pj->CurrentLoc;
-            pj->WriteTape(0, (byte) 'r'); // r for root, 0 is going to get overwritten
+            pj.ret_address[depth] = (bytechar) 's';
+            pj.containing_scope_offset[depth] = pj.CurrentLoc;
+            pj.WriteTape(0, (byte) 'r'); // r for root, 0 is going to get overwritten
             // the root is used, if nothing else, to capture the size of the tape
             depth++; // everything starts at depth = 1, depth = 0 is just for the root, the root may contain an object, an array or something else.
-            if (depth > pj->depthcapacity)
+            if (depth > pj.depthcapacity)
             {
                 goto fail;
             }
 
 
             //UPDATE_CHAR():
-            idx = pj->structural_indexes[i++];
+            idx = pj.structural_indexes[i++];
             c = buf[idx];
 
             switch (c)
             {
                 case (uint8_t) '{':
-                    pj->containing_scope_offset[depth] = pj->CurrentLoc;
-                    pj->ret_address[depth] = (bytechar) 's';
+                    pj.containing_scope_offset[depth] = pj.CurrentLoc;
+                    pj.ret_address[depth] = (bytechar) 's';
                     depth++;
-                    if (depth > pj->depthcapacity)
+                    if (depth > pj.depthcapacity)
                     {
                         goto fail;
                     }
 
-                    pj->WriteTape(0, c); // strangely, moving this to object_begin slows things down
+                    pj.WriteTape(0, c); // strangely, moving this to object_begin slows things down
                     goto object_begin;
                 case (uint8_t) '[':
-                    pj->containing_scope_offset[depth] = pj->CurrentLoc;
-                    pj->ret_address[depth] = (bytechar) 's';
+                    pj.containing_scope_offset[depth] = pj.CurrentLoc;
+                    pj.ret_address[depth] = (bytechar) 's';
                     depth++;
-                    if (depth > pj->depthcapacity)
+                    if (depth > pj.depthcapacity)
                     {
                         goto fail;
                     }
 
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     goto array_begin;
                 // A JSON text is a serialized value.  Note that certain previous
                 // specifications of JSON constrained a JSON text to be an object or an
@@ -160,7 +160,7 @@ namespace SimdJsonSharp
                     }
 
                     //free(copy);
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break;
                 }
                 case (uint8_t) 'f':
@@ -179,7 +179,7 @@ namespace SimdJsonSharp
                     }
 
                     //free(copy);
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break;
                 }
                 case (uint8_t) 'n':
@@ -198,7 +198,7 @@ namespace SimdJsonSharp
                     }
 
                     //free(copy);
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break;
                 }
                 case (uint8_t) '0':
@@ -253,7 +253,7 @@ namespace SimdJsonSharp
 
             start_continue:
             // the string might not be NULL terminated.
-            if (i + 1 == pj->n_structural_indexes)
+            if (i + 1 == pj.n_structural_indexes)
             {
                 goto succeed;
             }
@@ -265,7 +265,7 @@ namespace SimdJsonSharp
 
             object_begin:
             //UPDATE_CHAR():
-            idx = pj->structural_indexes[i++];
+            idx = pj.structural_indexes[i++];
             c = buf[idx];
             switch (c)
             {
@@ -286,7 +286,7 @@ namespace SimdJsonSharp
 
             object_key_state:
             //UPDATE_CHAR():
-            idx = pj->structural_indexes[i++];
+            idx = pj.structural_indexes[i++];
             c = buf[idx];
             if (c != ':')
             {
@@ -294,7 +294,7 @@ namespace SimdJsonSharp
             }
 
             //UPDATE_CHAR():
-            idx = pj->structural_indexes[i++];
+            idx = pj.structural_indexes[i++];
             c = buf[idx];
             switch (c)
             {
@@ -313,7 +313,7 @@ namespace SimdJsonSharp
                         goto fail;
                     }
 
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break;
                 case (uint8_t) 'f':
                     if (!is_valid_false_atom(buf + idx))
@@ -321,7 +321,7 @@ namespace SimdJsonSharp
                         goto fail;
                     }
 
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break;
                 case (uint8_t) 'n':
                     if (!is_valid_null_atom(buf + idx))
@@ -329,7 +329,7 @@ namespace SimdJsonSharp
                         goto fail;
                     }
 
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break;
                 case (uint8_t) '0':
                 case (uint8_t) '1':
@@ -360,13 +360,13 @@ namespace SimdJsonSharp
                 }
                 case (uint8_t) '{':
                 {
-                    pj->containing_scope_offset[depth] = pj->CurrentLoc;
-                    pj->WriteTape(0, c); // here the compilers knows what c is so this gets optimized
+                    pj.containing_scope_offset[depth] = pj.CurrentLoc;
+                    pj.WriteTape(0, c); // here the compilers knows what c is so this gets optimized
                     // we have not yet encountered } so we need to come back for it
-                    pj->ret_address[depth] = (bytechar) 'o';
+                    pj.ret_address[depth] = (bytechar) 'o';
                     // we found an object inside an object, so we need to increment the depth
                     depth++;
-                    if (depth > pj->depthcapacity)
+                    if (depth > pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -375,13 +375,13 @@ namespace SimdJsonSharp
                 }
                 case (uint8_t) '[':
                 {
-                    pj->containing_scope_offset[depth] = pj->CurrentLoc;
-                    pj->WriteTape(0, c); // here the compilers knows what c is so this gets optimized
+                    pj.containing_scope_offset[depth] = pj.CurrentLoc;
+                    pj.WriteTape(0, c); // here the compilers knows what c is so this gets optimized
                     // we have not yet encountered } so we need to come back for it
-                    pj->ret_address[depth] = (bytechar) 'o';
+                    pj.ret_address[depth] = (bytechar) 'o';
                     // we found an array inside an object, so we need to increment the depth
                     depth++;
-                    if (depth > pj->depthcapacity)
+                    if (depth > pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -394,13 +394,13 @@ namespace SimdJsonSharp
 
             object_continue:
             //UPDATE_CHAR():
-            idx = pj->structural_indexes[i++];
+            idx = pj.structural_indexes[i++];
             c = buf[idx];
             switch (c)
             {
                 case (uint8_t) ',':
                     //UPDATE_CHAR():
-                    idx = pj->structural_indexes[i++];
+                    idx = pj.structural_indexes[i++];
                     c = buf[idx];
                     if (c != (uint8_t) '"')
                     {
@@ -426,15 +426,15 @@ namespace SimdJsonSharp
             scope_end:
             // write our tape location to the header scope
             depth--;
-            pj->WriteTape(pj->containing_scope_offset[depth], c);
-            pj->AnnotatePreviousLoc(pj->containing_scope_offset[depth],
-                pj->CurrentLoc);
+            pj.WriteTape(pj.containing_scope_offset[depth], c);
+            pj.AnnotatePreviousLoc(pj.containing_scope_offset[depth],
+                pj.CurrentLoc);
             // goto saved_state
-            if (pj->ret_address[depth] == (uint8_t) 'a')
+            if (pj.ret_address[depth] == (uint8_t) 'a')
             {
                 goto array_continue;
             }
-            else if (pj->ret_address[depth] == (uint8_t) 'o')
+            else if (pj.ret_address[depth] == (uint8_t) 'o')
             {
                 goto object_continue;
             }
@@ -443,7 +443,7 @@ namespace SimdJsonSharp
             ////////////////////////////// ARRAY STATES /////////////////////////////
             array_begin:
             //UPDATE_CHAR():
-            idx = pj->structural_indexes[i++];
+            idx = pj.structural_indexes[i++];
             c = buf[idx];
             if (c == ']')
             {
@@ -470,7 +470,7 @@ namespace SimdJsonSharp
                         goto fail;
                     }
 
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break;
                 case (uint8_t) 'f':
                     if (!is_valid_false_atom(buf + idx))
@@ -478,7 +478,7 @@ namespace SimdJsonSharp
                         goto fail;
                     }
 
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break;
                 case (uint8_t) 'n':
                     if (!is_valid_null_atom(buf + idx))
@@ -486,7 +486,7 @@ namespace SimdJsonSharp
                         goto fail;
                     }
 
-                    pj->WriteTape(0, c);
+                    pj.WriteTape(0, c);
                     break; // goto array_continue;
 
                 case (uint8_t) '0':
@@ -519,12 +519,12 @@ namespace SimdJsonSharp
                 case (uint8_t) '{':
                 {
                     // we have not yet encountered ] so we need to come back for it
-                    pj->containing_scope_offset[depth] = pj->CurrentLoc;
-                    pj->WriteTape(0, c); //  here the compilers knows what c is so this gets optimized
-                    pj->ret_address[depth] = (bytechar) 'a';
+                    pj.containing_scope_offset[depth] = pj.CurrentLoc;
+                    pj.WriteTape(0, c); //  here the compilers knows what c is so this gets optimized
+                    pj.ret_address[depth] = (bytechar) 'a';
                     // we found an object inside an array, so we need to increment the depth
                     depth++;
-                    if (depth > pj->depthcapacity)
+                    if (depth > pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -534,12 +534,12 @@ namespace SimdJsonSharp
                 case (uint8_t) '[':
                 {
                     // we have not yet encountered ] so we need to come back for it
-                    pj->containing_scope_offset[depth] = pj->CurrentLoc;
-                    pj->WriteTape(0, c); // here the compilers knows what c is so this gets optimized
-                    pj->ret_address[depth] = (bytechar) 'a';
+                    pj.containing_scope_offset[depth] = pj.CurrentLoc;
+                    pj.WriteTape(0, c); // here the compilers knows what c is so this gets optimized
+                    pj.ret_address[depth] = (bytechar) 'a';
                     // we found an array inside an array, so we need to increment the depth
                     depth++;
-                    if (depth > pj->depthcapacity)
+                    if (depth > pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -552,13 +552,13 @@ namespace SimdJsonSharp
 
             array_continue:
             //UPDATE_CHAR():
-            idx = pj->structural_indexes[i++];
+            idx = pj.structural_indexes[i++];
             c = buf[idx];
             switch (c)
             {
                 case (uint8_t) ',':
                     //UPDATE_CHAR():
-                    idx = pj->structural_indexes[i++];
+                    idx = pj.structural_indexes[i++];
                     c = buf[idx];
                     goto main_array_switch;
                 case (uint8_t) ']':
@@ -577,14 +577,14 @@ namespace SimdJsonSharp
                 throw new InvalidOperationException("internal bug");
             }
 
-            if (pj->containing_scope_offset[depth] != 0)
+            if (pj.containing_scope_offset[depth] != 0)
             {
                 throw new InvalidOperationException("internal bug");
             }
 
-            pj->AnnotatePreviousLoc(pj->containing_scope_offset[depth], pj->CurrentLoc);
-            pj->WriteTape(pj->containing_scope_offset[depth], (byte) 'r'); // r is root
-            pj->isvalid = true;
+            pj.AnnotatePreviousLoc(pj.containing_scope_offset[depth], pj.CurrentLoc);
+            pj.WriteTape(pj.containing_scope_offset[depth], (byte) 'r'); // r is root
+            pj.isvalid = true;
             return true;
 
 

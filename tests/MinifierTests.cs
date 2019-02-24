@@ -15,7 +15,7 @@ namespace SimdJsonSharp.Tests
                             }
                             ";
 
-            string minifiedJson = JsonMinifier.Minify(json);
+            string minifiedJson = SimdJson.MinifyJson(json);
             Assert.Equal(@"{""Egor"":""Bogatov""}", minifiedJson);
             // TODO: more tests
         }
@@ -33,9 +33,9 @@ namespace SimdJsonSharp.Tests
             {
                 ReadOnlySpan<byte> fileData = File.ReadAllBytes(file);
                 Span<byte> output = new byte[fileData.Length];
-                JsonMinifier.Minify(fileData, output, out int bytesWritten);
+                SimdJson.MinifyJson(fileData, output, out int bytesWritten);
 
-                using (ParsedJson doc = SimdJson.BuildParsedJson(output.Slice(0, bytesWritten)))
+                using (ParsedJson doc = SimdJson.ParseJson(output.Slice(0, bytesWritten)))
                 {
                     Assert.True(doc.IsValid);
                 }

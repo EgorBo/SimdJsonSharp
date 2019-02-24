@@ -19,54 +19,8 @@ using static SimdJsonSharp.Utils;
 
 namespace SimdJsonSharp
 {
-    public static unsafe partial class JsonMinifier
+    internal static unsafe partial class JsonMinifier
     {
-        // C# friendly API:
-        public static string Minify(string input)
-        {
-            if (string.IsNullOrEmpty(input))
-                return input;
-
-            ReadOnlySpan<byte> inputBytes = Encoding.UTF8.GetBytes(input);
-            var length = inputBytes.Length;
-            byte[] pool = null;
-
-            try
-            {
-                Span<byte> span = length <= 2048 ?
-                    stackalloc byte[2048] : 
-                    (pool = ArrayPool<byte>.Shared.Rent(length));
-
-                Minify(inputBytes, span, out int bytesWritten);
-                return Encoding.UTF8.GetString(span.Slice(0, bytesWritten));
-            }
-            finally
-            {
-                if (pool != null)
-                    ArrayPool<byte>.Shared.Return(pool);
-            }
-        }
-        
-        public static void Minify(ReadOnlySpan<byte> input, Span<byte> output, out int bytesWritten)
-        {
-            if ((uint) input.Length < 1)
-            {
-                bytesWritten = 0;
-                return;
-            }
-
-            if ((uint)output.Length < 1)
-                throw new ArgumentException("Output is empty");
-
-            //TODO: how to validate output length?
-
-            fixed (byte* inputPtr = input)
-            fixed (byte* outputPtr = output)
-            {
-                bytesWritten = (int)Minify(inputPtr, (ulong)input.Length, outputPtr);
-            }
-        }
-
         // a straightforward comparison of a mask against input.
         private static uint64_t cmp_mask_against_input_mini(Vector256<byte> input_lo, Vector256<byte> input_hi, Vector256<byte> mask)
         {
