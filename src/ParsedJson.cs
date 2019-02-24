@@ -41,7 +41,7 @@ namespace SimdJsonSharp
         // documents having up to len butes and maxdepth "depth"
         //WARN_UNUSED
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool allocateCapacity(size_t len, size_t maxdepth = DEFAULTMAXDEPTH)
+        public bool AllocateCapacity(size_t len, size_t maxdepth = DEFAULTMAXDEPTH)
         {
             if ((maxdepth == 0) || (len == 0))
             {
@@ -53,7 +53,7 @@ namespace SimdJsonSharp
             {
                 if ((len <= bytecapacity) && (depthcapacity < maxdepth))
                     return true;
-                deallocate();
+                Deallocate();
             }
 
             isvalid = false;
@@ -86,7 +86,7 @@ namespace SimdJsonSharp
             return true;
         }
 
-        void deallocate()
+        private void Deallocate()
         {
             bytecapacity = 0;
             depthcapacity = 0;
@@ -102,16 +102,13 @@ namespace SimdJsonSharp
 
         public void Dispose()
         {
-            deallocate();
+            Deallocate();
         }
 
-        public bool isValid()
-        {
-            return isvalid;
-        }
+        public bool IsValid => isvalid;
 
         // this should be called when parsing (right before writing the tapes)
-        public void init()
+        public void Init()
         {
             current_string_buf_loc = string_buf;
             current_loc = 0;
@@ -134,35 +131,31 @@ namespace SimdJsonSharp
 
         // this should be considered a private function
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void write_tape(uint64_t val, uint8_t c)
+        public void WriteTape(uint64_t val, uint8_t c)
         {
             tape[current_loc++] = val | (((uint64_t) c) << 56);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void write_tape_s64(int64_t i)
+        public void WriteTapeS64(int64_t i)
         {
-            write_tape(0, (uint8_t) 'l');
+            WriteTape(0, (uint8_t) 'l');
             tape[current_loc++] = *((uint64_t*) &i);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void write_tape_double(double d)
+        public void WriteTapeDouble(double d)
         {
-            write_tape(0, (uint8_t) 'd');
+            WriteTape(0, (uint8_t) 'd');
             //static_assert(sizeof(d) == sizeof(tape[current_loc]), "mismatch size");
             Utils.memcpy(&tape[current_loc++], &d, sizeof(double));
             //tape[current_loc++] = *((uint64_t *)&d);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public uint32_t get_current_loc()
-        {
-            return current_loc;
-        }
+        public uint32_t CurrentLoc => current_loc;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void annotate_previousloc(uint32_t saved_loc, uint64_t val)
+        public void AnnotatePreviousLoc(uint32_t saved_loc, uint64_t val)
         {
             tape[saved_loc] |= val;
         }

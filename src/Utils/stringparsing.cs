@@ -123,7 +123,7 @@ namespace SimdJsonSharp
                     // we encountered quotes first. Move dst to point to quotes and exit
                     dst[quote_dist] = 0; // null terminate and get out
 
-                    pj->write_tape((size_t) pj->current_string_buf_loc - (size_t) pj->string_buf, (uint8_t) '"');
+                    pj->WriteTape((size_t) pj->current_string_buf_loc - (size_t) pj->string_buf, (uint8_t) '"');
 
                     pj->current_string_buf_loc = dst + quote_dist + 1; // the +1 is due to the 0 value
 #if CHECKUNESCAPED

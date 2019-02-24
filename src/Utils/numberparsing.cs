@@ -303,7 +303,7 @@ namespace SimdJsonSharp
             }
 
             double d = negative ? -i : i;
-            pj->write_tape_double(d);
+            pj->WriteTapeDouble(d);
 #if JSON_TEST_NUMBERS // for unit testing
             foundFloat(d, buf + offset);
 #endif
@@ -389,7 +389,7 @@ namespace SimdJsonSharp
             }
 
             int64_t signed_answer = negative ? -(int64_t) i : (int64_t) i;
-            pj->write_tape_s64(signed_answer);
+            pj->WriteTapeS64(signed_answer);
 #if JSON_TEST_NUMBERS // for unit testing
             foundInteger(signed_answer, buf + offset);
 #endif
@@ -571,7 +571,7 @@ namespace SimdJsonSharp
                 //////////
                 if (i == 0)
                 {
-                    pj->write_tape_double(0.0);
+                    pj->WriteTapeDouble(0.0);
 #if JSON_TEST_NUMBERS // for unit testing
                     foundFloat(0.0, buf + offset);
 #endif
@@ -590,7 +590,7 @@ namespace SimdJsonSharp
                     double d = i;
                     d *= power_of_ten[308 + exponent];
                     // d = negative ? -d : d;
-                    pj->write_tape_double(d);
+                    pj->WriteTapeDouble(d);
 #if JSON_TEST_NUMBERS // for unit testing
                     foundFloat(d, buf + offset);
 #endif
@@ -605,7 +605,7 @@ namespace SimdJsonSharp
                         found_minus);
                 }
 
-                pj->write_tape_s64(i);
+                pj->WriteTapeS64(i);
 #if JSON_TEST_NUMBERS // for unit testing
                 foundInteger(i, buf + offset);
 #endif

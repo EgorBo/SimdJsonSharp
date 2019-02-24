@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 #region stdint types and friends
 // if you change something here please change it in other files too
@@ -21,19 +22,21 @@ namespace SimdJsonSharp
 {
     public static unsafe class SimdJson
     {
-        public static ParsedJson build_parsed_json(ReadOnlySpan<byte> data)
+        private static readonly long pagesize = System.Environment.SystemPageSize;
+
+        public static ParsedJson BuildParsedJson(ReadOnlySpan<byte> jsonData)
         {
-            fixed (byte* dataPtr = data)
-                return build_parsed_json(dataPtr, (ulong)data.Length);
+            fixed (byte* dataPtr = jsonData)
+                return BuildParsedJson(dataPtr, (ulong)jsonData.Length);
         }
 
-        public static ParsedJson build_parsed_json(uint8_t* buf, size_t len, bool reallocifneeded = true)
+        public static ParsedJson BuildParsedJson(uint8_t* jsonData, size_t length, bool reallocIfNeeded = true)
         {
             ParsedJson pj = new ParsedJson();
-            bool ok = pj.allocateCapacity(len);
+            bool ok = pj.AllocateCapacity(length);
             if (ok)
             {
-                ok = json_parse(buf, len, &pj, reallocifneeded);
+                ok = JsonParse(jsonData, length, &pj, reallocIfNeeded);
             }
             else
             {
@@ -42,39 +45,38 @@ namespace SimdJsonSharp
             return pj;
         }
 
-        public static bool json_parse(uint8_t* buf, size_t len, ParsedJson* pj, bool reallocifneeded = true)
+        public static bool JsonParse(uint8_t* jsonData, size_t length, ParsedJson* pj, bool reallocIfNeeded = true)
         {
-            if (pj->bytecapacity < len)
+            if (pj->bytecapacity < length)
             {
-                Debug.WriteLine("Your ParsedJson cannot support documents that big: " + len);
+                Debug.WriteLine("Your ParsedJson cannot support documents that big: " + length);
                 return false;
             }
             bool reallocated = false;
-            if (reallocifneeded)
+            if (reallocIfNeeded)
             {
                 // realloc is needed if the end of the memory crosses a page
-                long pagesize = System.Environment.SystemPageSize;
 
-                if (((size_t)(buf + len - 1) % (size_t)pagesize) < SIMDJSON_PADDING)
+                if (((size_t)(jsonData + length - 1) % (size_t)pagesize) < SIMDJSON_PADDING)
                 {
-                    uint8_t* tmpbuf = buf;
-                    buf = (uint8_t*)Utils.allocate_padded_buffer(len);
-                    if (buf == null) return false;
-                    memcpy((void*)buf, tmpbuf, len);
+                    uint8_t* tmpbuf = jsonData;
+                    jsonData = (uint8_t*)Utils.allocate_padded_buffer(length);
+                    if (jsonData == null) return false;
+                    memcpy((void*)jsonData, tmpbuf, length);
                     reallocated = true;
                 }
             }
-            bool isok = stage1_find_marks.find_structural_bits(buf, len, pj);
+            bool isok = stage1_find_marks.find_structural_bits(jsonData, length, pj);
             if (isok)
             {
-                isok = stage2_build_tape.unified_machine(buf, len, pj);
+                isok = stage2_build_tape.unified_machine(jsonData, length, pj);
             }
             else
             {
-                if (reallocated) Utils.free((void*)buf);
+                if (reallocated) Utils.free((void*)jsonData);
                 return false;
             }
-            if (reallocated) Utils.free((void*)buf);
+            if (reallocated) Utils.free((void*)jsonData);
             return isok;
         }
     }

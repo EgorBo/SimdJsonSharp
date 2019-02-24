@@ -53,13 +53,13 @@ namespace Benchmarks
         public unsafe ulong SimdJsonSharpApi(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
-            using (ParsedJson doc = SimdJson.build_parsed_json(data))
+            using (ParsedJson doc = SimdJson.BuildParsedJson(data))
             {
-                using (var iterator = new iterator(&doc))
+                using (var iterator = new ParsedJsonIterator(&doc))
                 {
-                    while (iterator.move_forward())
+                    while (iterator.MoveForward())
                     {
-                        if (iterator.is_integer() || iterator.is_double())
+                        if (iterator.IsInteger || iterator.IsDouble)
                         {
                             numbersCount++;
                         }

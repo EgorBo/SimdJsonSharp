@@ -5,10 +5,23 @@ using Xunit;
 
 namespace SimdJsonSharp.Tests
 {
-    public class ValidateTestFilesTests
+    public class MinifierTests
     {
         [Fact]
-        public void ValidateAllFiles()
+        public void ValidateMinifier()
+        {
+            string json = @"{
+                              ""Egor"":  ""Bogatov"" 
+                            }
+                            ";
+
+            string minifiedJson = JsonMinifier.Minify(json);
+            Assert.Equal(@"{""Egor"":""Bogatov""}", minifiedJson);
+            // TODO: more tests
+        }
+
+        [Fact]
+        public void ValidateMinimizedJson()
         {
             string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string testDataDir = Path.Combine(currentDir, @"../../../../external/simdjson/jsonexamples");
@@ -19,7 +32,10 @@ namespace SimdJsonSharp.Tests
             foreach (string file in files)
             {
                 ReadOnlySpan<byte> fileData = File.ReadAllBytes(file);
-                using (ParsedJson doc = SimdJson.BuildParsedJson(fileData))
+                Span<byte> output = new byte[fileData.Length];
+                JsonMinifier.Minify(fileData, output, out int bytesWritten);
+
+                using (ParsedJson doc = SimdJson.BuildParsedJson(output.Slice(0, bytesWritten)))
                 {
                     Assert.True(doc.IsValid);
                 }

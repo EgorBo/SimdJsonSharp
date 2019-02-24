@@ -13,19 +13,19 @@ namespace ConsoleApp124
             ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(helloWorldJson);
             // SimdJson is UTF8 only
 
-            using (ParsedJson doc = SimdJson.build_parsed_json(bytes))
+            using (ParsedJson doc = SimdJson.BuildParsedJson(bytes))
             {
-                Console.WriteLine("Is json valid:" + doc.isValid());
+                Console.WriteLine("Is json valid:" + doc.IsValid);
                 
                 // open iterator:
-                using (iterator iterator = new iterator(&doc))
+                using (var iterator = new ParsedJsonIterator(&doc))
                 {
-                    while (iterator.move_forward())
+                    while (iterator.MoveForward())
                     {
                         switch (iterator.GetTokenType())
                         {
                             case JsonTokenType.Number:
-                                Console.WriteLine("integer: " + iterator.get_integer());
+                                Console.WriteLine("integer: " + iterator.GetInteger());
                                 break;
 
                             case JsonTokenType.String:

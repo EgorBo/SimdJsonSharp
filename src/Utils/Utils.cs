@@ -27,7 +27,6 @@ namespace SimdJsonSharp
         public const ulong JSONVALUEMASK = 0xFFFFFFFFFFFFFF;
         public const ulong DEFAULTMAXDEPTH = 1024;  // a JSON document with a depth exceeding 1024 is probably de facto invalid
 
-
         //C#: ReadOnlySpan<byte> trick I learned here https://github.com/dotnet/coreclr/pull/22100#discussion_r249261548
         private static ReadOnlySpan<byte> structural_or_whitespace_negated => new byte[256] {
             0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -75,7 +74,6 @@ namespace SimdJsonSharp
             return structural_or_whitespace[c];
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint64_t trailingzeroes(UInt64 input_num)
         {
@@ -116,14 +114,15 @@ namespace SimdJsonSharp
             return *(byte*)s1 - *(byte*)s2;
         }
 
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void memcpy(void* destination, void* source, UInt64 length)
+        public static void memcpy(void* destination, void* source, UInt64 length)
         {
             Unsafe.CopyBlockUnaligned(destination, source, (uint)length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void memset(void* dst, byte value, uint length)
+        public static void memset(void* dst, byte value, uint length)
         {
             Unsafe.InitBlockUnaligned(dst, value, length);
         }
@@ -207,9 +206,14 @@ namespace SimdJsonSharp
             return 0; // bad r
         }
 
+        // windows only:
+        //[DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+        //public static extern void* _aligned_malloc(ulong size, ulong alignment);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bytechar* allocate_padded_buffer(size_t length)
         {
+            //return (bytechar*)_aligned_malloc(length + SIMDJSON_PADDING, 64);
             //C#: TODO: _aligned_malloc
             return allocate<bytechar>(length);
         }

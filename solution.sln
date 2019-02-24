@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "benchmarks\Benchmarks.csproj", "{5783067E-D420-462E-943C-4CBA2D74121C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinifyJson", "samples\MinifyJson\MinifyJson.csproj", "{D795C37F-D8D3-4B29-ADBA-548C6711D69B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{5783067E-D420-462E-943C-4CBA2D74121C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5783067E-D420-462E-943C-4CBA2D74121C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5783067E-D420-462E-943C-4CBA2D74121C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D795C37F-D8D3-4B29-ADBA-548C6711D69B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D795C37F-D8D3-4B29-ADBA-548C6711D69B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D795C37F-D8D3-4B29-ADBA-548C6711D69B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D795C37F-D8D3-4B29-ADBA-548C6711D69B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,6 +56,7 @@ Global
 		{E85B732E-8A68-4C53-82D2-8F4319A14BB9} = {0EA09D21-043B-437C-83B5-B400D68DFBE0}
 		{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F} = {6DD8E0E9-0838-4299-B9B0-E0B75830CCF0}
 		{5783067E-D420-462E-943C-4CBA2D74121C} = {53CBE9B1-22D6-4D6F-A78A-0D6FBA9ED000}
+		{D795C37F-D8D3-4B29-ADBA-548C6711D69B} = {0EA09D21-043B-437C-83B5-B400D68DFBE0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1154050C-AA23-4D3A-80C0-923978F0E163}
