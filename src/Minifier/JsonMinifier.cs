@@ -196,7 +196,7 @@ namespace SimdJsonSharp
                         int pop4 = hamming((~whitespace));
                         var vmask1 =
                             _mm256_loadu2_m128i((ulong*)mask128_epi8 + (mask2 & 0x7FFF)*2,
-                                (ulong*)mask128_epi8 + (mask1 & 0x7FFF));
+                                (ulong*)mask128_epi8 + (mask1 & 0x7FFF)*2);
                         var vmask2 =
                             _mm256_loadu2_m128i((ulong*)mask128_epi8 + (mask4 & 0x7FFF)*2,
                                 (ulong*)mask128_epi8 + (mask3 & 0x7FFF)*2);
@@ -272,17 +272,6 @@ namespace SimdJsonSharp
                     int pop2 = hamming((~whitespace) & 0xFFFFFFFF);
                     int pop3 = hamming((~whitespace) & 0xFFFFFFFFFFFF);
                     int pop4 = hamming((~whitespace));
-
-                    ulong* hiaddr = (ulong*)mask128_epi8 + (mask2 & 0x7FFF) * 2;
-                    ulong* loaddr = (ulong*)mask128_epi8 + (mask1 & 0x7FFF) * 2;
-                    var hhi = Sse2.LoadVector128(hiaddr);
-                    var llo = Sse2.LoadVector128(loaddr);
-                    var casted = llo.ToVector256();
-                    var finalmask1 = Avx.InsertVector128(casted, hhi, 0x1);
-
-
-
-
 
                     var vmask1 =
                         _mm256_loadu2_m128i((ulong*)mask128_epi8 + (mask2 & 0x7FFF)*2,
