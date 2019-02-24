@@ -9,40 +9,45 @@ count tokens with type=number, close the file.
 ```
 |            Method |           fileName |    fileSize |         Mean | Ratio |
 |------------------ |------------------- |------------ |-------------:|------:|
-|  SimdJsonSharpApi | apache_builds.json |   127.28 Kb |     99.28 us |  1.00 |
-| Utf8JsonReaderApi | apache_builds.json |   127.28 Kb |    226.42 us |  2.28 |
+|          SimdJson | apache_builds.json |   127.28 Kb |     99.28 us |  1.00 |
+|    Utf8JsonReader | apache_builds.json |   127.28 Kb |    226.42 us |  2.28 |
 |           JsonNet | apache_builds.json |   127.28 Kb |    461.30 us |  4.64 |
 |      SpanJsonUtf8 | apache_builds.json |   127.28 Kb |    168.08 us |  1.69 |
 |                   |                    |             |              |       |
-|  SimdJsonSharpApi |        canada.json | 2,251.05 Kb |  4,494.44 us |  1.00 |
-| Utf8JsonReaderApi |        canada.json | 2,251.05 Kb |  6,308.01 us |  1.40 |
+|          SimdJson |        canada.json | 2,251.05 Kb |  4,494.44 us |  1.00 |
+|    Utf8JsonReader |        canada.json | 2,251.05 Kb |  6,308.01 us |  1.40 |
 |           JsonNet |        canada.json | 2,251.05 Kb | 67,718.12 us | 15.06 |
 |      SpanJsonUtf8 |        canada.json | 2,251.05 Kb |  6,679.82 us |  1.49 |
 |                   |                    |             |              |       |
-|  SimdJsonSharpApi |  citm_catalog.json | 1,727.20 Kb |  1,572.78 us |  1.00 |
-| Utf8JsonReaderApi |  citm_catalog.json | 1,727.20 Kb |  3,786.10 us |  2.41 |
+|          SimdJson |  citm_catalog.json | 1,727.20 Kb |  1,572.78 us |  1.00 |
+|    Utf8JsonReader |  citm_catalog.json | 1,727.20 Kb |  3,786.10 us |  2.41 |
 |           JsonNet |  citm_catalog.json | 1,727.20 Kb |  5,903.38 us |  3.75 |
 |      SpanJsonUtf8 |  citm_catalog.json | 1,727.20 Kb |  3,021.13 us |  1.92 |
 |                   |                    |             |              |       |
-|  SimdJsonSharpApi | github_events.json |    65.13 Kb |     46.01 us |  1.00 |
-| Utf8JsonReaderApi | github_events.json |    65.13 Kb |    113.80 us |  2.47 |
+|          SimdJson | github_events.json |    65.13 Kb |     46.01 us |  1.00 |
+|    Utf8JsonReader | github_events.json |    65.13 Kb |    113.80 us |  2.47 |
 |           JsonNet | github_events.json |    65.13 Kb |    214.01 us |  4.65 |
 |      SpanJsonUtf8 | github_events.json |    65.13 Kb |     89.09 us |  1.94 |
 |                   |                    |             |              |       |
-|  SimdJsonSharpApi |     gsoc-2018.json | 3,327.83 Kb |  2,209.42 us |  1.00 |
-| Utf8JsonReaderApi |     gsoc-2018.json | 3,327.83 Kb |  4,010.10 us |  1.82 |
+|          SimdJson |     gsoc-2018.json | 3,327.83 Kb |  2,209.42 us |  1.00 |
+|    Utf8JsonReader |     gsoc-2018.json | 3,327.83 Kb |  4,010.10 us |  1.82 |
 |           JsonNet |     gsoc-2018.json | 3,327.83 Kb |  6,729.44 us |  3.05 |
 |      SpanJsonUtf8 |     gsoc-2018.json | 3,327.83 Kb |  2,759.59 us |  1.25 |
 |                   |                    |             |              |       |
-|  SimdJsonSharpApi |   instruments.json |   220.35 Kb |    257.78 us |  1.00 |
-| Utf8JsonReaderApi |   instruments.json |   220.35 Kb |    594.22 us |  2.31 |
+|          SimdJson |   instruments.json |   220.35 Kb |    257.78 us |  1.00 |
+|    Utf8JsonReader |   instruments.json |   220.35 Kb |    594.22 us |  2.31 |
 |           JsonNet |   instruments.json |   220.35 Kb |    980.42 us |  3.80 |
 |      SpanJsonUtf8 |   instruments.json |   220.35 Kb |    409.47 us |  1.59 |
 |                   |                    |             |              |       |
-|  SimdJsonSharpApi |     marine_ik.json | 2,983.47 Kb |  8,510.30 us |  1.00 |
-| Utf8JsonReaderApi |     marine_ik.json | 2,983.47 Kb | 11,465.33 us |  1.35 |
+|          SimdJson |     marine_ik.json | 2,983.47 Kb |  8,510.30 us |  1.00 |
+|    Utf8JsonReader |     marine_ik.json | 2,983.47 Kb | 11,465.33 us |  1.35 |
 |           JsonNet |     marine_ik.json | 2,983.47 Kb | 32,113.43 us |  3.77 |
 |      SpanJsonUtf8 |     marine_ik.json | 2,983.47 Kb |  8,885.77 us |  1.04 |
+|                   |                    |             |              |       |
+|          SimdJson |      truenull.json |    12.00 Kb |  16,032.6 ns |  1.00 |
+|    Utf8JsonReader |      truenull.json |    12.00 Kb |  58,365.2 ns |  3.64 |
+|           JsonNet |      truenull.json |    12.00 Kb |  60,977.3 ns |  3.80 |
+|      SpanJsonUtf8 |      truenull.json |    12.00 Kb |  24,069.2 ns |  1.50 |
 ```
 
 Environment:
