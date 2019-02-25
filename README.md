@@ -46,6 +46,23 @@ Test json files can be found [here](https://github.com/lemire/simdjson/tree/mast
 |      SpanJsonUtf8 |      truenull.json |    12.00 Kb |  24,069.2 ns |  1.50 |
 ```
 
+Json minification:
+
+|                Method |           fileName |    fileSize |         Mean | Ratio |
+|---------------------- |------------------- |------------ |-------------:|------:|
+|  SimdJsonNoValidation | apache_builds.json |   127.28 Kb |     186.8 us |  1.00 |
+|              SimdJson | apache_builds.json |   127.28 Kb |     262.5 us |  1.41 |
+|               JsonNet | apache_builds.json |   127.28 Kb |   1,802.6 us |  9.65 |
+|                       |                    |             |              |       |
+|  SimdJsonNoValidation |        canada.json | 2,251.05 Kb |   4,130.7 us |  1.00 |
+|              SimdJson |        canada.json | 2,251.05 Kb |   7,940.7 us |  1.92 |
+|               JsonNet |        canada.json | 2,251.05 Kb | 181,884.0 us | 44.06 |
+|                       |                    |             |              |       |
+|  SimdJsonNoValidation |  citm_catalog.json | 1,727.20 Kb |   2,346.9 us |  1.00 |
+|              SimdJson |  citm_catalog.json | 1,727.20 Kb |   4,064.0 us |  1.75 |
+|               JsonNet |  citm_catalog.json | 1,727.20 Kb |  34,831.0 us | 14.84 |
+
+
 ## Usage
 The C# API is not stable yet and currently fully copies the original C-style API
 thus it involves some `Unsafe` magic including pointers.
