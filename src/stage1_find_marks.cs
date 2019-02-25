@@ -62,6 +62,13 @@ namespace SimdJsonSharp
 
             uint32_t* base_ptr = pj.structural_indexes;
             uint32_t @base = 0;
+#if SIMDJSON_UTF8VALIDATE // NOT TESTED YET!
+            var has_error = Vector256<byte>.Zero;
+            var previous = new avx_processed_utf_bytes();
+            previous.rawbytes = Vector256<byte>.Zero;
+            previous.high_nibbles = Vector256<byte>.Zero;
+            previous.carried_continuations = Vector256<byte>.Zero;
+#endif
 
             const uint64_t even_bits = 0x5555555555555555UL;
             const uint64_t odd_bits = ~even_bits;
@@ -97,6 +104,26 @@ namespace SimdJsonSharp
             {
                 var input_lo = Avx.LoadVector256(buf + idx + 0);
                 var input_hi = Avx.LoadVector256(buf + idx + 32);
+#if SIMDJSON_UTF8VALIDATE // NOT TESTED YET!
+                var highbit = Vector256.Create((byte)0x80);
+                if ((Avx.TestZ(Avx2.Or(input_lo, input_hi), highbit)) == true)
+                {
+                    // it is ascii, we just check continuation
+                    has_error = Avx2.Or(
+                      Avx2.CompareGreaterThan(previous.carried_continuations.AsSByte(),
+                                      Vector256.Create((sbyte)9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                                                       9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                                                       9, 9, 9, 9, 9, 9, 9, 1)).AsByte(), has_error);
+
+                }
+                else
+                {
+                    // it is not ascii so we have to do heavy work
+                    previous = Utf8Validation.avxcheckUTF8Bytes(input_lo, ref previous, ref has_error);
+                    previous = Utf8Validation.avxcheckUTF8Bytes(input_hi, ref previous, ref has_error);
+                }
+#endif
+
                 ////////////////////////////////////////////////////////////////////////////////////////////
                 //     Step 1: detect odd sequences of backslashes
                 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -245,6 +272,25 @@ namespace SimdJsonSharp
                 memcpy(tmpbuf, buf + idx, len - idx);
                 Vector256<byte> input_lo = Avx.LoadVector256(tmpbuf + 0);
                 Vector256<byte> input_hi = Avx.LoadVector256(tmpbuf + 32);
+#if SIMDJSON_UTF8VALIDATE // NOT TESTED YET!
+                var highbit = Vector256.Create((byte)0x80);
+                if ((Avx.TestZ(Avx2.Or(input_lo, input_hi), highbit)) == true)
+                {
+                    // it is ascii, we just check continuation
+                    has_error = Avx2.Or(
+                      Avx2.CompareGreaterThan(previous.carried_continuations.AsSByte(),
+                                      Vector256.Create((sbyte)9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                                                       9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                                                       9, 9, 9, 9, 9, 9, 9, 1)).AsByte(), has_error);
+
+                }
+                else
+                {
+                    // it is not ascii so we have to do heavy work
+                    previous = Utf8Validation.avxcheckUTF8Bytes(input_lo, ref previous, ref has_error);
+                    previous = Utf8Validation.avxcheckUTF8Bytes(input_hi, ref previous, ref has_error);
+                }
+#endif
                 ////////////////////////////////////////////////////////////////////////////////////////////
                 //     Step 1: detect odd sequences of backslashes
                 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -422,7 +468,11 @@ namespace SimdJsonSharp
             }
             base_ptr[pj.n_structural_indexes] = 0; // make it safe to dereference one beyond this array
 
+#if SIMDJSON_UTF8VALIDATE // NOT TESTED YET!
+            return Avx.TestZ(has_error, has_error);
+#else
             return true;
+#endif
         }
     }
 }
