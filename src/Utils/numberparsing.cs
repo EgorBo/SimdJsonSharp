@@ -144,9 +144,9 @@ namespace SimdJsonSharp
         }
 
         // C#: static readonly is an alternative to `const _m128`
-        private static readonly Vector128<sbyte> mul_1_10 = Vector128.Create((bytechar) 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10 /*C#reversed*/);
-        private static readonly Vector128<short> mul_1_100 = Vector128.Create(1, 100, 1, 100, 1, 100, 1, 100 /*C#reversed*/);
-        private static readonly Vector128<short> mul_1_10000 = Vector128.Create(1, 10000, 1, 10000, 1, 10000, 1, 10000 /*C#reversed*/);
+        private static readonly Vector128<sbyte> mul_1_10 = Vector128.Create((bytechar) 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1);
+        private static readonly Vector128<short> mul_1_100 = Vector128.Create(100, 1, 100, 1, 100, 1, 100 /*C#reversed*/, 1);
+        private static readonly Vector128<short> mul_1_10000 = Vector128.Create(10000, 1, 10000, 1, 10000, 1, 10000, 1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint32_t parse_eight_digits_unrolled(bytechar* chars)
