@@ -63,8 +63,7 @@ namespace Benchmarks
                 JsonTextReader reader = new JsonTextReader(streamReader);
                 while (reader.Read())
                 {
-                    if (reader.TokenType == JsonToken.Float || 
-                        reader.TokenType == JsonToken.Integer)
+                    if (reader.TokenType == JsonToken.String)
                     {
                         // count all strings starting with 'a' 
                         if (reader.ReadAsString().StartsWith('a'))
@@ -85,7 +84,7 @@ namespace Benchmarks
             SpanJson.JsonToken token;
             while ((token = reader.ReadUtf8NextToken()) != SpanJson.JsonToken.None)
             {
-                if (token == SpanJson.JsonToken.Number)
+                if (token == SpanJson.JsonToken.String)
                 {
                     // count all strings starting with 'a' 
                     if (reader.ReadString().StartsWith('a'))
