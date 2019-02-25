@@ -17,7 +17,6 @@ Open [canada.json](https://raw.githubusercontent.com/lemire/simdjson/master/json
 |         JsonNet |  canada.json | 2,251.05 Kb | 70,078 ms | 14.81 |
 |    SpanJsonUtf8 |  canada.json | 2,251.05 Kb | 54,878 ms | 11.60 |
 ```
-**UPD** I suspect there are issues in SimdJson here - resulting floats are not accurate
 
 ### 2. Count all tokens
 ```
