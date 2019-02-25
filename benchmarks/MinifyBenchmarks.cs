@@ -8,13 +8,12 @@ namespace Benchmarks
 {
     public class MinifyBenchmarks : BenchmarksBase
     {
-        [Benchmark]
+        [Benchmark(Baseline = true)]
         [ArgumentsSource(nameof(TestData))]
-        public string JsonNet(byte[] jsonData, string fileName, string fileSize)
+        public string _SimdJsonWithoutValidation(byte[] jsonData, string fileName, string fileSize)
         {
             string json = Encoding.UTF8.GetString(jsonData);
-            // let's benchmark string API.
-            return JObject.Parse(json).ToString(Newtonsoft.Json.Formatting.None);
+            return SimdJson.MinifyJson(json);
         }
 
         [Benchmark]
@@ -33,6 +32,15 @@ namespace Benchmarks
             }
 
             return SimdJson.MinifyJson(json);
+        }
+
+        [Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public string JsonNet(byte[] jsonData, string fileName, string fileSize)
+        {
+            string json = Encoding.UTF8.GetString(jsonData);
+            // let's benchmark string API.
+            return JObject.Parse(json).ToString(Newtonsoft.Json.Formatting.None);
         }
     }
 }
