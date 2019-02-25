@@ -7,7 +7,16 @@ SIMD instructions including AVX2 (C# version uses `System.Runtime.Intrinsics` AP
 The following [benchmark](https://github.com/EgorBo/SimdJsonSharp/blob/master/benchmarks/CountTokens.cs) compares `SimdJsonSharp` with .NET Core 3.0 `Utf8JsonReader`, `Json.NET` and `SpanJson` libraries.
 Test json files can be found [here](https://github.com/lemire/simdjson/tree/master/jsonexamples).
 
+### 1. Parse doubles
+Open [canada.json](https://raw.githubusercontent.com/lemire/simdjson/master/jsonexamples/canada.json) and parse all coordinates as `System.Double`:
+|          Method |     fileName |    fileSize |      Mean | Ratio |
+|---------------- |------------- |-------------|----------:|------:|
+|        SimdJson |  canada.json | 2,251.05 Kb |  4,733 ms |  1.00 |
+|  Utf8JsonReader |  canada.json | 2,251.05 Kb | 56,692 ms | 11.98 |
+|         JsonNet |  canada.json | 2,251.05 Kb | 70,078 ms | 14.81 |
+|    SpanJsonUtf8 |  canada.json | 2,251.05 Kb | 54,878 ms | 11.60 |
 
+### 2. Count all tokens
 |            Method |           fileName |    fileSize |         Mean | Ratio |
 |------------------ |------------------- |------------ |-------------:|------:|
 |          **SimdJson** | apache_builds.json |   127.28 Kb |     99.28 us |  1.00 |
@@ -45,7 +54,7 @@ Test json files can be found [here](https://github.com/lemire/simdjson/tree/mast
 |           JsonNet |      truenull.json |    12.00 Kb |  60,977.3 ns |  3.80 |
 |      SpanJsonUtf8 |      truenull.json |    12.00 Kb |  24,069.2 ns |  1.50 |
 
-Json minification:
+### 3.Json minification:
 
 |                Method |           fileName |    fileSize |         Mean | Ratio |
 |---------------------- |------------------- |------------ |-------------:|------:|
