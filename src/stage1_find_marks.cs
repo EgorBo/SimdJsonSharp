@@ -51,6 +51,10 @@ namespace SimdJsonSharp
             (byte)8, 0, 18, 4, 0, 1, 0, 1, 0, 0, 0, 3, 2, 1, 0, 0, 8, 0, 18, 4, 0, 1, 0,
             1, 0, 0, 0, 3, 2, 1, 0, 0);
 
+        private static readonly Vector256<byte> s_utf8ValidVec = Vector256.Create((byte)9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                                                       9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+                                                       9, 9, 9, 9, 9, 9, 9, 1);
+
         internal static bool find_structural_bits(uint8_t* buf, size_t len, ParsedJson pj)
         {
             if (len > pj.bytecapacity)
@@ -68,6 +72,7 @@ namespace SimdJsonSharp
             previous.rawbytes = Vector256<byte>.Zero;
             previous.high_nibbles = Vector256<byte>.Zero;
             previous.carried_continuations = Vector256<byte>.Zero;
+            var highbit = Vector256.Create((byte)0x80);
 #endif
 
             const uint64_t even_bits = 0x5555555555555555UL;
@@ -91,6 +96,7 @@ namespace SimdJsonSharp
             // C#: assign static readonly fields to locals before the loop
             Vector256<byte> low_nibble_mask = s_low_nibble_mask;
             Vector256<byte> high_nibble_mask = s_high_nibble_mask;
+            Vector256<byte> utf8ValidVec = s_utf8ValidVec;
 
             var structural_shufti_mask = Vector256.Create((byte)0x7);
             var whitespace_shufti_mask = Vector256.Create((byte)0x18);
@@ -105,15 +111,11 @@ namespace SimdJsonSharp
                 var input_lo = Avx.LoadVector256(buf + idx + 0);
                 var input_hi = Avx.LoadVector256(buf + idx + 32);
 #if SIMDJSON_UTF8VALIDATE // NOT TESTED YET!
-                var highbit = Vector256.Create((byte)0x80);
                 if ((Avx.TestZ(Avx2.Or(input_lo, input_hi), highbit)) == true)
                 {
                     // it is ascii, we just check continuation
                     has_error = Avx2.Or(
-                      Avx2.CompareGreaterThan(previous.carried_continuations.AsSByte(),
-                                      Vector256.Create((sbyte)9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-                                                       9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-                                                       9, 9, 9, 9, 9, 9, 9, 1)).AsByte(), has_error);
+                        Avx2.CompareGreaterThan(previous.carried_continuations.AsSByte(), utf8ValidVec, has_error);
 
                 }
                 else
@@ -279,9 +281,7 @@ namespace SimdJsonSharp
                     // it is ascii, we just check continuation
                     has_error = Avx2.Or(
                       Avx2.CompareGreaterThan(previous.carried_continuations.AsSByte(),
-                                      Vector256.Create((sbyte)9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-                                                       9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-                                                       9, 9, 9, 9, 9, 9, 9, 1)).AsByte(), has_error);
+                                      utf8ValidVec).AsByte(), has_error);
 
                 }
                 else

@@ -59,6 +59,9 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool handle_unicode_codepoint(uint8_t** src_ptr, uint8_t** dst_ptr)
         {
+            // hex_to_u32_nocheck fills high 16 bits of the return value with 1s if the
+            // conversion isn't valid; we defer the check for this to inside the 
+            // multilingual plane check
             uint32_t code_point = hex_to_u32_nocheck(*src_ptr + 2);
             *src_ptr += 6;
             // check for low surrogate for characters outside the Basic
@@ -71,6 +74,17 @@ namespace SimdJsonSharp
                 }
 
                 uint32_t code_point_2 = hex_to_u32_nocheck(*src_ptr + 2);
+
+                // if the first code point is invalid we will get here, as we will go past
+                // the check for being outside the Basic Multilingual plane. If we don't
+                // find a \u immediately afterwards we fail out anyhow, but if we do, 
+                // this check catches both the case of the first code point being invalid
+                // or the second code point being invalid.
+                if ((code_point | code_point_2) >> 16 != 0)
+                {
+                    return false;
+                }
+
                 code_point =
                     (((code_point - 0xd800) << 10) | (code_point_2 - 0xdc00)) + 0x10000;
                 *src_ptr += 6;
@@ -94,6 +108,7 @@ namespace SimdJsonSharp
 #endif
             var slashVec = Vector256.Create((byte) '\\');
             var quoteVec = Vector256.Create((byte) '"');
+            var unitsep = Vector256.Create((byte)0x1F);
 
             while (true)
             {
@@ -108,7 +123,6 @@ namespace SimdJsonSharp
                 //through U+001F).
                 // https://tools.ietf.org/html/rfc8259
 #if CHECKUNESCAPED
-                var unitsep = Vector256.Create((byte) 0x1F);
                 var unescaped_vec =
                     Avx2.CompareEqual(Avx2.Max(unitsep, v), unitsep); // could do it with saturated subtraction
 #endif // CHECKUNESCAPED

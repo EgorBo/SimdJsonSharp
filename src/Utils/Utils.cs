@@ -161,13 +161,20 @@ namespace SimdJsonSharp
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1};
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        // returns a value with the high 16 bits set if not valid
+        // otherwise returns the conversion of the 4 hex digits at src into the bottom 16 bits of the 32-bit
+        // return register
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static uint32_t hex_to_u32_nocheck(uint8_t* src) {
-            uint8_t v1 = src[0];
-            uint8_t v2 = src[1];
-            uint8_t v3 = src[2];
-            uint8_t v4 = src[3];
-            return (uint32_t)(digittoval[v1] << 12 | digittoval[v2] << 8 | digittoval[v3] << 4 | digittoval[v4]);
+            // all these will sign-extend the chars looked up, placing 1-bits into the high 28 bits of every
+            // invalid value. After the shifts, this will *still* result in the outcome that the high 16 bits of any
+            // value with any invalid char will be all 1's. We check for this in the caller.
+            uint8_t v1 = (uint8_t)digittoval[src[0]];
+            uint8_t v2 = (uint8_t)digittoval[src[1]];
+            uint8_t v3 = (uint8_t)digittoval[src[2]];
+            uint8_t v4 = (uint8_t)digittoval[src[3]];
+            return (uint32_t)(v1 << 12 | v2 << 8 | v3 << 4 | v4);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -215,7 +222,7 @@ namespace SimdJsonSharp
         {
             //return (bytechar*)_aligned_malloc(length + SIMDJSON_PADDING, 64);
             //C#: TODO: _aligned_malloc
-            return allocate<bytechar>(length);
+            return allocate<bytechar>(length + SIMDJSON_PADDING);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
