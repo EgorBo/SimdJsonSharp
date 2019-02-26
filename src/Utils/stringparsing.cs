@@ -2,6 +2,7 @@
 // (c) Daniel Lemire
 
 #define CHECKUNESCAPED
+using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.CompilerServices;
@@ -27,7 +28,7 @@ namespace SimdJsonSharp
         // These chars yield themselves: " \ /
         // b -> backspace, f -> formfeed, n -> newline, r -> cr, t -> horizontal tab
         // u not handled in this table as it's complex
-        static readonly uint8_t[] escape_map = new uint8_t[256]
+        static ReadOnlySpan<byte> escape_map => new uint8_t[256]
         {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0x0.
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -131,7 +132,8 @@ namespace SimdJsonSharp
                 uint32_t bs_dist = (uint32_t) trailingzeroes(bs_bits);
                 // store to dest unconditionally - we can overwrite the bits we don't like
                 // later
-                Avx.Store((dst), v);
+                memcpy(dst, src, 32);
+
                 if (quote_dist < bs_dist)
                 {
                     // we encountered quotes first. Move dst to point to quotes and exit

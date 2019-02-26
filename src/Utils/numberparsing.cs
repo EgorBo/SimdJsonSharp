@@ -2,6 +2,7 @@
 // (c) Daniel Lemire
 
 #define SWAR_NUMBER_PARSING
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -105,7 +106,7 @@ namespace SimdJsonSharp
             //return (uint8_t) (c - '0') <= 9;
         }
 
-        private static readonly byte[] structural_or_whitespace_or_exponent_or_decimal_negated = new byte[256]
+        private static ReadOnlySpan<byte> structural_or_whitespace_or_exponent_or_decimal_negated => new byte[256]
         {
             1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
             1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1,

@@ -87,15 +87,15 @@ namespace SimdJsonSharp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int hamming(UInt64 input_num)
+        public static size_t hamming(UInt64 input_num)
         {
             if (IntPtr.Size == 8)
             {
-                return (int)Popcnt.X64.PopCount(input_num);
+                return Popcnt.X64.PopCount(input_num);
             }
             else
             {
-                return (int)(Popcnt.PopCount((UInt32)input_num) +
+                return (size_t)(Popcnt.PopCount((UInt32)input_num) +
                              Popcnt.PopCount((UInt32)(input_num >> 32)));
             }
         }
@@ -145,7 +145,7 @@ namespace SimdJsonSharp
             throw new NotImplementedException(":("); // same here - _umul128
         }
 
-        private static bytechar[] digittoval = new bytechar[256] {
+        private static ReadOnlySpan<bytechar> digittoval => new bytechar[256] {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,
@@ -165,7 +165,7 @@ namespace SimdJsonSharp
         // otherwise returns the conversion of the 4 hex digits at src into the bottom 16 bits of the 32-bit
         // return register
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint32_t hex_to_u32_nocheck(uint8_t* src) {
             // all these will sign-extend the chars looked up, placing 1-bits into the high 28 bits of every
             // invalid value. After the shifts, this will *still* result in the outcome that the high 16 bits of any

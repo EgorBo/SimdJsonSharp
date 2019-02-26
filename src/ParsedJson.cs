@@ -46,7 +46,6 @@ namespace SimdJsonSharp
 
         // if needed, allocate memory so that the object is able to process JSON
         // documents having up to len butes and maxdepth "depth"
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool AllocateCapacity(size_t len, size_t maxdepth = DEFAULTMAXDEPTH)
         {
             if ((maxdepth == 0) || (len == 0))
@@ -175,7 +174,6 @@ namespace SimdJsonSharp
         public void WriteTapeDouble(double d)
         {
             WriteTape(0, (uint8_t) 'd');
-            //static_assert(sizeof(d) == sizeof(tape[current_loc]), "mismatch size");
             memcpy(&tape[current_loc++], &d, sizeof(double));
             //tape[current_loc++] = *((uint64_t *)&d);
         }

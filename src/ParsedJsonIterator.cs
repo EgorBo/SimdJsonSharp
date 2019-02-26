@@ -2,6 +2,7 @@
 // (c) Daniel Lemire
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -348,32 +349,31 @@ namespace SimdJsonSharp
         /// </summary>
         public JsonTokenType GetTokenType()
         {
-            switch (current_type)
-            {
-                case (byte)'d': // 'd' for floats
-                case (byte)'l':
-                    return JsonTokenType.Number;
-                case (byte)'n':
-                    return JsonTokenType.Null;
-                case (byte)'t':
-                    return JsonTokenType.True;
-                case (byte)'f':
-                    return JsonTokenType.False;
-                case (byte)'{':
-                    return JsonTokenType.StartObject;
-                case (byte)'}':
-                    return JsonTokenType.EndObject;
-                case (byte)'[':
-                    return JsonTokenType.StartArray;
-                case (byte)']':
-                    return JsonTokenType.EndArray;
-                case (byte)'"':
-                    return JsonTokenType.String;
-                default:
-                    return JsonTokenType.None;
-            }
+            if (current_type == (byte)'{')
+                return JsonTokenType.StartObject;
+            if (current_type == (byte)'}')
+                return JsonTokenType.EndObject;
+            if (current_type == (byte)'l' || current_type == (byte)'d')
+                return JsonTokenType.Number;
+            if (current_type == (byte)'"')
+                return JsonTokenType.String;
+            if (current_type == (byte)'[')
+                return JsonTokenType.StartArray;
+            if (current_type == (byte)']')
+                return JsonTokenType.EndArray;
+            if (current_type == (byte)'n')
+                return JsonTokenType.Null;
+            if (current_type == (byte)'t')
+                return JsonTokenType.True;
+            if (current_type == (byte)'f')
+                return JsonTokenType.False;
+            return JsonTokenType.None;
         }
 
-        public string GetUtf16String() => new string(GetUtf8String());
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public string GetUtf16String()
+        {
+            return new string(GetUtf8String());
+        }
     }
 }
