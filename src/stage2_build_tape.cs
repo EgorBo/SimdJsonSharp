@@ -31,8 +31,8 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool is_valid_true_atom(uint8_t* loc)
         {
-            uint64_t tv = 2314885531981673076; //* (uint64_t*)"true    ";
-            uint64_t mask4 = 0x00000000ffffffff;
+            const uint64_t tv = 2314885531981673076; //* (uint64_t*)"true    ";
+            const uint64_t mask4 = 0x00000000ffffffff;
             uint32_t error = 0;
             uint64_t locval; // we want to avoid unaligned 64-bit loads (undefined in C/C++)
             memcpy(&locval, loc, sizeof(uint64_t));
@@ -44,8 +44,8 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool is_valid_false_atom(uint8_t* loc)
         {
-            uint64_t fv = 2314885828568703334; //* (uint64_t*)"false   ";
-            uint64_t mask5 = 0x000000ffffffffff;
+            const uint64_t fv = 2314885828568703334; //* (uint64_t*)"false   ";
+            const uint64_t mask5 = 0x000000ffffffffff;
             uint32_t error = 0;
             uint64_t locval; // we want to avoid unaligned 64-bit loads (undefined in C/C++)
             memcpy(&locval, loc, sizeof(uint64_t));
@@ -57,8 +57,8 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool is_valid_null_atom(uint8_t* loc)
         {
-            uint64_t nv = 2314885532098524526; //* (uint64_t*)"null    ";
-            uint64_t mask4 = 0x00000000ffffffff;
+            const uint64_t nv = 2314885532098524526; //* (uint64_t*)"null    ";
+            const uint64_t mask4 = 0x00000000ffffffff;
             uint32_t error = 0;
             uint64_t locval; // we want to avoid unaligned 64-bit loads (undefined in C/C++)
             memcpy(&locval, loc, sizeof(uint64_t));
@@ -149,17 +149,16 @@ namespace SimdJsonSharp
                     // we need to make a copy to make sure that the string is NULL terminated.
                     // this only applies to the JSON document made solely of the true value.
                     // this will almost never be called in practice
-                    bytechar* copy = stackalloc bytechar[(int) (len + SIMDJSON_PADDING)];
-                    if (copy == null) goto fail;
+                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
                     memcpy(copy, buf, len);
                     copy[len] = (bytechar) '\0';
                     if (!is_valid_true_atom((uint8_t*) copy + idx))
                     {
-                        //free(copy);
+                        free(copy);
                         goto fail;
                     }
 
-                    //free(copy);
+                    free(copy);
                     pj.WriteTape(0, c);
                     break;
                 }
@@ -168,17 +167,16 @@ namespace SimdJsonSharp
                     // we need to make a copy to make sure that the string is NULL terminated.
                     // this only applies to the JSON document made solely of the false value.
                     // this will almost never be called in practice
-                    bytechar* copy = stackalloc bytechar[(int) (len + SIMDJSON_PADDING)];
-                    if (copy == null) goto fail;
+                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
                     memcpy(copy, buf, len);
                     copy[len] = (bytechar) '\0';
                     if (!is_valid_false_atom((uint8_t*) copy + idx))
                     {
-                        //free(copy);
+                        free(copy);
                         goto fail;
                     }
 
-                    //free(copy);
+                    free(copy);
                     pj.WriteTape(0, c);
                     break;
                 }
@@ -187,17 +185,16 @@ namespace SimdJsonSharp
                     // we need to make a copy to make sure that the string is NULL terminated.
                     // this only applies to the JSON document made solely of the null value.
                     // this will almost never be called in practice
-                    bytechar* copy = stackalloc bytechar[(int) (len + SIMDJSON_PADDING)];
-                    if (copy == null) goto fail;
+                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
                     memcpy(copy, buf, len);
                     copy[len] = (bytechar) '\0';
                     if (!is_valid_null_atom((uint8_t*) copy + idx))
                     {
-                        //free(copy);
+                        free(copy);
                         goto fail;
                     }
 
-                    //free(copy);
+                    free(copy);
                     pj.WriteTape(0, c);
                     break;
                 }
@@ -215,17 +212,16 @@ namespace SimdJsonSharp
                     // we need to make a copy to make sure that the string is NULL terminated.
                     // this is done only for JSON documents made of a sole number
                     // this will almost never be called in practice
-                    bytechar* copy = stackalloc bytechar[(int) (len + SIMDJSON_PADDING)];
-                    if (copy == null) goto fail;
+                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
                     memcpy(copy, buf, len);
                     copy[len] = (bytechar) '\0';
                     if (!parse_number((uint8_t*) copy, pj, idx, false))
                     {
-                        //free(copy);
+                        free(copy);
                         goto fail;
                     }
 
-                    //free(copy);
+                    free(copy);
                     break;
                 }
                 case (uint8_t) '-':
@@ -233,17 +229,16 @@ namespace SimdJsonSharp
                     // we need to make a copy to make sure that the string is NULL terminated.
                     // this is done only for JSON documents made of a sole number
                     // this will almost never be called in practice
-                    bytechar* copy = stackalloc bytechar[(int) (len + SIMDJSON_PADDING)];
-                    if (copy == null) goto fail;
+                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
                     memcpy(copy, buf, len);
                     copy[len] = (bytechar) '\0';
                     if (!parse_number((uint8_t*) copy, pj, idx, true))
                     {
-                        //free(copy);
+                        free(copy);
                         goto fail;
                     }
 
-                    //free(copy);
+                    free(copy);
                     break;
                 }
 #endif // ALLOWANYTHINGINROOT

@@ -146,10 +146,10 @@ namespace SimdJsonSharp
                         int mask2 = (int) ((whitespace >> 16) & 0xFFFF);
                         int mask3 = (int) ((whitespace >> 32) & 0xFFFF);
                         int mask4 = (int) ((whitespace >> 48) & 0xFFFF);
-                        int pop1 = hamming((~whitespace) & 0xFFFF);
-                        int pop2 = hamming((~whitespace) & (ulong) (0xFFFFFFFF));
-                        int pop3 = hamming((~whitespace) & (ulong) (0xFFFFFFFFFFFF));
-                        int pop4 = hamming((~whitespace));
+                        int pop1 = (int)hamming((~whitespace) & 0xFFFF);
+                        int pop2 = (int)hamming((~whitespace) & (ulong) (0xFFFFFFFF));
+                        int pop3 = (int)hamming((~whitespace) & (ulong) (0xFFFFFFFFFFFF));
+                        int pop4 = (int)hamming((~whitespace));
                         var vmask1 =
                             _mm256_loadu2_m128i((ulong*)mask128_epi8 + (mask2 & 0x7FFF)*2,
                                 (ulong*)mask128_epi8 + (mask1 & 0x7FFF)*2);
@@ -224,10 +224,10 @@ namespace SimdJsonSharp
                     int mask2 = (int) ((whitespace >> 16) & 0xFFFF);
                     int mask3 = (int) ((whitespace >> 32) & 0xFFFF);
                     int mask4 = (int) ((whitespace >> 48) & 0xFFFF);
-                    int pop1 = hamming((~whitespace) & 0xFFFF);
-                    int pop2 = hamming((~whitespace) & 0xFFFFFFFF);
-                    int pop3 = hamming((~whitespace) & 0xFFFFFFFFFFFF);
-                    int pop4 = hamming((~whitespace));
+                    int pop1 = (int)hamming((~whitespace) & 0xFFFF);
+                    int pop2 = (int)hamming((~whitespace) & 0xFFFFFFFF);
+                    int pop3 = (int)hamming((~whitespace) & 0xFFFFFFFFFFFF);
+                    int pop4 = (int)hamming((~whitespace));
 
                     var vmask1 =
                         _mm256_loadu2_m128i((ulong*)mask128_epi8 + (mask2 & 0x7FFF)*2,

@@ -44,7 +44,7 @@ namespace SimdJsonSharp.Tests
                 using (ParsedJson doc = SimdJson.ParseJson(ptr, bytes.Length))
                 {
                     Assert.False(doc.IsValid);
-                    Assert.Throws<Exception>(() => doc.CreateIterator());
+                    Assert.Throws<InvalidOperationException>(() => doc.CreateIterator());
                 }
             }
         }

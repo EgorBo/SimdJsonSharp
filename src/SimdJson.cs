@@ -67,6 +67,7 @@ namespace SimdJsonSharp
 
         public static void MinifyJson(ReadOnlySpan<byte> input, Span<byte> output, out int bytesWritten)
         {
+#if JSON_MINIFY
             if ((uint)input.Length < 1)
             {
                 bytesWritten = 0;
@@ -83,6 +84,9 @@ namespace SimdJsonSharp
             {
                 bytesWritten = (int)JsonMinifier.Minify(inputPtr, (ulong)input.Length, outputPtr);
             }
+#else
+            throw new NotSupportedException("SimdJsonSharp was compiled without `JSON_MINIFY`.");
+#endif
         }
 
         private static readonly long pagesize = Environment.SystemPageSize;
