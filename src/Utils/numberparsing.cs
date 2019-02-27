@@ -4,6 +4,7 @@
 #define SWAR_NUMBER_PARSING
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
@@ -124,7 +125,11 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool is_not_structural_or_whitespace_or_exponent_or_decimal(unsigned_bytechar c)
         {
-            return structural_or_whitespace_or_exponent_or_decimal_negated[c] == 1;
+            // Bypass bounds check as c can never 
+            // exceed the bounds of structural_or_whitespace_or_exponent_or_decimal_negated
+            return Unsafe.AddByteOffset(
+                ref MemoryMarshal.GetReference(structural_or_whitespace_or_exponent_or_decimal_negated),
+                (IntPtr)c) == 1;
         }
 
         // check quickly whether the next 8 chars are made of digits

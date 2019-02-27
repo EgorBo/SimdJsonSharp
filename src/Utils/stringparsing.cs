@@ -3,9 +3,10 @@
 
 #define CHECKUNESCAPED
 using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using System.Runtime.CompilerServices;
 
 #region stdint types and friends
 // if you change something here please change it in other files too
@@ -50,6 +51,16 @@ namespace SimdJsonSharp
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint8_t escape(uint8_t c)
+        {
+            // Bypass bounds check as c can never 
+            // exceed the bounds of escape_map
+            return Unsafe.AddByteOffset(
+               ref MemoryMarshal.GetReference(escape_map),
+               (IntPtr)c);
+        }
 
         // handle a unicode codepoint
         // write appropriate values into dest
@@ -209,7 +220,7 @@ namespace SimdJsonSharp
                         // write bs_dist+1 characters to output
                         // note this may reach beyond the part of the buffer we've actually
                         // seen. I think this is ok
-                        uint8_t escape_result = escape_map[escape_char];
+                        uint8_t escape_result = escape(escape_char);
                         if (escape_result == 0)
                         {
 #if JSON_TEST_STRINGS // for unit testing

@@ -120,7 +120,7 @@ namespace SimdJsonSharp
                         // write bs_dist+1 characters to output
                         // note this may reach beyond the part of the buffer we've actually
                         // seen. I think this is ok
-                        uint8_t escape_result = escape_map[escape_char];
+                        uint8_t escape_result = escape(escape_char);
                         if (escape_result == 0)
                         {
 #if JSON_TEST_STRINGS // for unit testing
