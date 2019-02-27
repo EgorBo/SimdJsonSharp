@@ -50,8 +50,11 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint32_t is_not_structural_or_whitespace(uint8_t c)
         {
-            // bounds checks :(
-            return structural_or_whitespace_negated[c];
+            // Bypass bounds check as c can never 
+            // exceed the bounds of structural_or_whitespace_negated
+            return Unsafe.AddByteOffset(
+                ref MemoryMarshal.GetReference(structural_or_whitespace_negated), 
+                (IntPtr)c);
         }
 
         private static ReadOnlySpan<byte> structural_or_whitespace => new byte[256] {
@@ -70,8 +73,11 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint32_t is_structural_or_whitespace(uint8_t c)
         {
-            // bounds checks :(
-            return structural_or_whitespace[c];
+            // Bypass bounds check as c can never 
+            // exceed the bounds of structural_or_whitespace
+            return Unsafe.AddByteOffset(
+                ref MemoryMarshal.GetReference(structural_or_whitespace), 
+                (IntPtr)c);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
