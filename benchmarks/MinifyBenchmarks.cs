@@ -42,5 +42,23 @@ namespace Benchmarks
             // let's benchmark string API.
             return JObject.Parse(json).ToString(Newtonsoft.Json.Formatting.None);
         }
+
+        [Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public string SpanJsonUtf16(byte[] jsonData, string fileName, string fileSize)
+        {
+            string json = Encoding.UTF8.GetString(jsonData);
+            // let's benchmark string API.
+            return SpanJson.JsonSerializer.Minifier.Minify(json);
+        }
+
+
+        [Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public byte[] SpanJsonUtf8(byte[] jsonData, string fileName, string fileSize)
+        {
+            // let's benchmark string API.
+            return SpanJson.JsonSerializer.Minifier.Minify(jsonData);
+        }
     }
 }
