@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.X86;
+using System.Text;
 using System.Text.Json;
 
 #region stdint types and friends
@@ -370,9 +372,12 @@ namespace SimdJsonSharp
             return JsonTokenType.None;
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetUtf16String()
         {
+            // SLOW!
+            // FastAllocate + AVX?
+            // or the algorithm should store Lengths somewhere https://github.com/lemire/simdjson/issues/87
             return new string(GetUtf8String());
         }
     }
