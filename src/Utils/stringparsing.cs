@@ -101,8 +101,8 @@ namespace SimdJsonSharp
         {
             if (Avx2.IsSupported)
                 return parse_string_avx2(buf, len, pj, depth, offset);
-            if (Sse41.IsSupported)
-                return parse_string_sse41(buf, len, pj, depth, offset);
+            //if (Sse41.IsSupported)
+            //    return parse_string_sse41(buf, len, pj, depth, offset);
 
             ThrowHelper.ThrowPNSE();
             return false;
@@ -116,6 +116,8 @@ namespace SimdJsonSharp
 #else
             uint8_t* src = &buf[offset + 1]; // we know that buf at offset is a "
             uint8_t* dst = pj.current_string_buf_loc;
+            uint8_t* dst_start = dst;
+
 #if JSON_TEST_STRINGS // for unit testing
             uint8_t *const start_of_string = dst;
 #endif
@@ -150,8 +152,11 @@ namespace SimdJsonSharp
                     // we encountered quotes first. Move dst to point to quotes and exit
                     dst[quote_dist] = 0; // null terminate and get out
 
-                    pj.WriteTape((size_t) pj.current_string_buf_loc - (size_t) pj.string_buf, (uint8_t) '"');
+                    uint32_t strLength = (uint32_t)(dst - dst_start + quote_dist);
+                    uint64_t bufOffset = (uint64_t) pj.current_string_buf_loc - (uint64_t) pj.string_buf;
+                    uint64_t value = (uint64_t) strLength << 32 | bufOffset;
 
+                    pj.WriteTape(value, (uint8_t) '"');
                     pj.current_string_buf_loc = dst + quote_dist + 1; // the +1 is due to the 0 value
 #if CHECKUNESCAPED
                     // check that there is no unescaped char before the quote

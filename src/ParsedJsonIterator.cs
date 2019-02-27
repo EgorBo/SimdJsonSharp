@@ -191,7 +191,25 @@ namespace SimdJsonSharp
         // return value is valid UTF-8
         public bytechar* GetUtf8String()
         {
-            return (bytechar*)(pj.string_buf + (current_val & JSONVALUEMASK));
+            return (bytechar*)(pj.string_buf + (current_val & (JSONVALUEMASK >> 24))); // for >> 24 see comments in GetUtf8StringLength()
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetUtf8StringLength()
+        {
+            // C#:
+            // current_val is:
+            // [toke_type][string_length][string_buffer_offset]
+            // where token_type will be always 0x2200_0000_0000_0000 (")
+            return (int)((current_val >> 32) - 0x22000000);
+        }
+
+        internal static readonly UTF8Encoding s_utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string GetUtf16String()
+        {
+            return s_utf8Encoding.GetString((byte*)GetUtf8String(), GetUtf8StringLength());
         }
 
         // throughout return true if we can do the navigation, false
@@ -370,15 +388,6 @@ namespace SimdJsonSharp
             if (current_type == (byte)'f')
                 return JsonTokenType.False;
             return JsonTokenType.None;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string GetUtf16String()
-        {
-            // SLOW!
-            // FastAllocate + AVX?
-            // or the algorithm should store Lengths somewhere https://github.com/lemire/simdjson/issues/87
-            return new string(GetUtf8String());
         }
     }
 }
