@@ -102,9 +102,7 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool is_integer(bytechar c)
         {
-            return (c >= (bytechar) '0' && c <= (bytechar) '9');
-            // this gets compiled to (uint8_t)(c - '0') <= 9 on all decent compilers
-            //return (uint8_t) (c - '0') <= 9;
+            return (uint8_t)(c - '0') <= 9;
         }
 
         private static ReadOnlySpan<byte> structural_or_whitespace_or_exponent_or_decimal_negated => new byte[256]
