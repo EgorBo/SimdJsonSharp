@@ -248,5 +248,11 @@ namespace SimdJsonSharp
         {
             Marshal.FreeHGlobal((IntPtr)buf);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void aligned_free(void* buf)
+        {
+            Marshal.FreeHGlobal((IntPtr)buf);
+        }
     }
 }

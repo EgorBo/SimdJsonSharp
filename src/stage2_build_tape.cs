@@ -67,7 +67,7 @@ namespace SimdJsonSharp
             return error == 0;
         }
 
-        internal static bool unified_machine(uint8_t* buf, size_t len, ParsedJson pj)
+        internal static JsonParseError unified_machine(uint8_t* buf, size_t len, ParsedJson pj)
         {
             uint32_t i = 0; // index of the structural character (0,1,2,3...)
             uint32_t idx; // location of the structural character in the input (buf)
@@ -76,10 +76,7 @@ namespace SimdJsonSharp
             uint32_t depth = 0; // could have an arbitrary starting depth
             pj.Init();
             if (pj.bytecapacity < len)
-            {
-                Debug.Write("insufficient capacity\n");
-                return false;
-            }
+                return JsonParseError.Capacity;
 
             // this macro reads the next structural character, updating idx, i and c.
             //C#: expanded directly everywhere
@@ -580,12 +577,12 @@ namespace SimdJsonSharp
             pj.AnnotatePreviousLoc(pj.containing_scope_offset[depth], pj.CurrentLoc);
             pj.WriteTape(pj.containing_scope_offset[depth], (byte) 'r'); // r is root
             pj.isvalid = true;
-            return true;
+            return JsonParseError.Success;
 
 
 
             fail:
-            return false;
+            return JsonParseError.TapeError;
         }
     }
 }

@@ -45,7 +45,7 @@ namespace SimdJsonSharp
         }
 
         // if needed, allocate memory so that the object is able to process JSON
-        // documents having up to len butes and maxdepth "depth"
+        // documents having up to len bytes and maxdepth "depth"
         public bool AllocateCapacity(size_t len, size_t maxdepth = DEFAULTMAXDEPTH)
         {
             if ((maxdepth == 0) || (len == 0))
@@ -54,12 +54,9 @@ namespace SimdJsonSharp
                 return false;
             }
 
-            if (len > 0)
-            {
-                if ((len <= bytecapacity) && (depthcapacity < maxdepth))
-                    return true;
-                Deallocate();
-            }
+            if ((len <= bytecapacity) && (depthcapacity < maxdepth))
+                return true;
+            Deallocate();
 
             isvalid = false;
             bytecapacity = 0; // will only set it to len after allocations are a success

@@ -91,10 +91,10 @@ namespace SimdJsonSharp
 
         private static readonly long pagesize = Environment.SystemPageSize;
 
-        internal static bool JsonParse(uint8_t* jsonData, size_t length, ParsedJson pj, bool reallocIfNeeded = true)
+        internal static JsonParseError JsonParse(uint8_t* jsonData, size_t length, ParsedJson pj, bool reallocIfNeeded = true)
         {
             if (pj.bytecapacity < length)
-                throw new InvalidOperationException("Your ParsedJson cannot support documents that big: " + length);
+                return JsonParseError.Capacity;
 
             bool reallocated = false;
             if (reallocIfNeeded)
@@ -104,23 +104,26 @@ namespace SimdJsonSharp
                 {
                     uint8_t* tmpbuf = jsonData;
                     jsonData = (uint8_t*)allocate_padded_buffer(length);
-                    if (jsonData == null) return false;
+                    if (jsonData == null) return JsonParseError.Memalloc;
                     memcpy(jsonData, tmpbuf, length);
                     reallocated = true;
                 }
             }
-            bool isok = stage1_find_marks.find_structural_bits(jsonData, length, pj);
-            if (isok)
-            {
-                isok = stage2_build_tape.unified_machine(jsonData, length, pj);
-            }
-            else
-            {
-                if (reallocated) free(jsonData);
-                return false;
-            }
-            if (reallocated) free(jsonData);
-            return isok;
+
+            var result = JsonParseError.Success;
+            if (stage1_find_marks.find_structural_bits(jsonData, length, pj))
+                result = stage2_build_tape.unified_machine(jsonData, length, pj);
+            if (reallocated)
+                aligned_free(jsonData);
+            return result;
         }
+    }
+
+    public enum JsonParseError
+    {
+        Success,
+        Capacity,
+        Memalloc,
+        TapeError
     }
 }
