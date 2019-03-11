@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{0EA0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{96B2940D-00A0-488F-B4F4-3936C689C2E2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimdJsonSharp", "src\SimdJsonSharp.csproj", "{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimdJsonSharp.Managed", "src\FullyManagedImpl\SimdJsonSharp.Managed.csproj", "{835E9AEC-18FF-4FBB-89F5-0B1AB8A90E4F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{53CBE9B1-22D6-4D6F-A78A-0D6FBA9ED000}"
 EndProject
@@ -25,9 +25,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. FullyManaged", "1. Fully
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. BindingsForNativeLib", "2. BindingsForNativeLib", "{5668BADB-B2CF-4E1A-A885-DC10B11D26B2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimdJsonNative", "src\Bindings\SimdJsonNative\SimdJsonNative.vcxproj", "{B688E099-77FF-46D9-B61B-5C6D718DDBFB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimdJsonNative", "src\BindingsForNativeLib\SimdJsonNative\SimdJsonNative.vcxproj", "{B688E099-77FF-46D9-B61B-5C6D718DDBFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimdJsonSharp.Bindings", "src\Bindings\SimdJsonSharp.Bindings\SimdJsonSharp.Bindings.csproj", "{399AA870-D18B-40BB-AAB2-4DFDDB7B8DE6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimdJsonSharp.Bindings", "src\BindingsForNativeLib\SimdJsonSharp.Bindings\SimdJsonSharp.Bindings.csproj", "{399AA870-D18B-40BB-AAB2-4DFDDB7B8DE6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

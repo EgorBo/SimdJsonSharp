@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FullyManagedImpl\SimdJsonSharp.Managed.csproj" />
     <ProjectReference Include="..\..\src\SimdJsonSharp.csproj" />
   </ItemGroup>
 
