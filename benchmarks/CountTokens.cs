@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text.Json;
 using BenchmarkDotNet.Attributes;
+using HelloWorld;
 using Newtonsoft.Json;
 using SimdJsonSharp;
 
@@ -17,6 +18,30 @@ namespace Benchmarks
             {
                 using (ParsedJson doc = SimdJson.ParseJson(dataPtr, data.Length))
                 using (var iterator = new ParsedJsonIterator(doc))
+                {
+                    while (iterator.MoveForward())
+                    {
+                        if (iterator.IsDouble || iterator.IsInteger)
+                        {
+                            if (iterator.GetDouble() > 42000)
+                                numbersCount++;
+                        }
+                    }
+                }
+            }
+
+            return numbersCount;
+        }
+
+        //[Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public unsafe ulong _SimdJsonNative(byte[] data, string fileName, string fileSize)
+        {
+            ulong numbersCount = 0;
+            fixed (byte* dataPtr = data)
+            {
+                using (ParsedJsonN doc = SimdJsonN.ParseJson(dataPtr, (uint)data.Length))
+                using (var iterator = new ParsedJsonIteratorN(doc))
                 {
                     while (iterator.MoveForward())
                     {

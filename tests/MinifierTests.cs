@@ -24,7 +24,7 @@ namespace SimdJsonSharp.Tests
         public unsafe void ValidateMinimizedJson()
         {
             string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string testDataDir = Path.Combine(currentDir, @"../../../../external/simdjson/jsonexamples");
+            string testDataDir = Path.Combine(currentDir, @"../../../../jsonexamples");
 
             string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories);
             // 20 files, ~15Mb of JSON
