@@ -32,7 +32,7 @@ namespace Benchmarks
             return wordsCount;
         }
 
-        //[Benchmark]
+        [Benchmark]
         [ArgumentsSource(nameof(TestData))]
         public unsafe ulong SimdJsonNUtf16(byte[] data, string fileName, string fileSize)
         {
