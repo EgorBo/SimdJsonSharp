@@ -1,4 +1,4 @@
-/* auto-generated on Fri Mar  8 19:04:53 PST 2019. Do not edit! */
+/* auto-generated on Tue, Mar 12, 2019  3:30:51 PM. Do not edit! */
 #include "simdjson.h"
 
 /* used for http://dmalloc.com/ Dmalloc - Debug Malloc Library */
@@ -1297,8 +1297,12 @@ bool ParsedJson::allocateCapacity(size_t len, size_t maxdepth) {
       std::cerr << "capacities must be non-zero " << std::endl;
       return false;
     }
-    if ((len <= bytecapacity) && (depthcapacity < maxdepth))
+    if(len > SIMDJSON_MAXSIZE_BYTES) {
+      return false;
+    }
+    if ((len <= bytecapacity) && (depthcapacity < maxdepth)) {
       return true;
+    }
     deallocate();
     isvalid = false;
     bytecapacity = 0; // will only set it to len after allocations are a success
@@ -1306,7 +1310,9 @@ bool ParsedJson::allocateCapacity(size_t len, size_t maxdepth) {
     uint32_t max_structures = ROUNDUP_N(len, 64) + 2 + 7;
     structural_indexes = new (std::nothrow) uint32_t[max_structures];
     size_t localtapecapacity = ROUNDUP_N(len, 64);
-    size_t localstringcapacity = ROUNDUP_N(len + 32, 64);
+    // a document with only zero-length strings... could have len/3 string
+    // and we would need len/3 * 5 bytes on the string buffer 
+    size_t localstringcapacity = ROUNDUP_N(5 * len / 3 + 32, 64); 
     string_buf = new (std::nothrow) uint8_t[localstringcapacity];
     tape = new (std::nothrow) uint64_t[localtapecapacity];
     containing_scope_offset = new (std::nothrow) uint32_t[maxdepth];
@@ -1362,6 +1368,7 @@ bool ParsedJson::printjson(std::ostream &os) {
     if(!isvalid) { 
       return false;
     }
+    uint32_t string_length;
     size_t tapeidx = 0;
     uint64_t tape_val = tape[tapeidx];
     uint8_t type = (tape_val >> 56);
@@ -1405,7 +1412,8 @@ bool ParsedJson::printjson(std::ostream &os) {
       switch (type) {
       case '"': // we have a string
         os << '"';
-        print_with_escapes((const unsigned char *)(string_buf + payload));
+        memcpy(&string_length,string_buf + payload, sizeof(uint32_t));
+        print_with_escapes((const unsigned char *)(string_buf + payload + sizeof(uint32_t)), string_length); 
         os << '"';
         break;
       case 'l': // we have a long int
@@ -1474,8 +1482,10 @@ bool ParsedJson::printjson(std::ostream &os) {
 
 WARN_UNUSED
 bool ParsedJson::dump_raw_tape(std::ostream &os) {
-    if(!isvalid) { return false;
-}
+    if(!isvalid) { 
+      return false;
+    }
+    uint32_t string_length;
     size_t tapeidx = 0;
     uint64_t tape_val = tape[tapeidx];
     uint8_t type = (tape_val >> 56);
@@ -1498,7 +1508,8 @@ bool ParsedJson::dump_raw_tape(std::ostream &os) {
       switch (type) {
       case '"': // we have a string
         os << "string \"";
-        print_with_escapes((const unsigned char *)(string_buf + payload));
+        memcpy(&string_length,string_buf + payload, sizeof(uint32_t));
+        print_with_escapes((const unsigned char *)(string_buf + payload + sizeof(uint32_t)), string_length);
         os << '"';
         os << '\n';
         break;
@@ -1553,6 +1564,7 @@ bool ParsedJson::dump_raw_tape(std::ostream &os) {
 }
 /* end file src/parsedjson.cpp */
 /* begin file src/parsedjsoniterator.cpp */
+#include <iterator>
 
 ParsedJson::iterator::iterator(ParsedJson &pj_) : pj(pj_), depth(0), location(0), tape_length(0), depthindex(nullptr) {
         if(pj.isValid()) {
@@ -1659,23 +1671,31 @@ uint8_t ParsedJson::iterator::get_type()  const {
 
 
 int64_t ParsedJson::iterator::get_integer()  const {
-    if(location + 1 >= tape_length) { return 0;// default value in case of error
-}
+    if(location + 1 >= tape_length) { 
+      return 0;// default value in case of error
+    }
     return static_cast<int64_t>(pj.tape[location + 1]);
 }
 
 double ParsedJson::iterator::get_double()  const {
-    if(location + 1 >= tape_length) { return NAN;// default value in case of error
-}
+    if(location + 1 >= tape_length) { 
+      return NAN;// default value in case of error
+    }
     double answer;
     memcpy(&answer, & pj.tape[location + 1], sizeof(answer));
     return answer;
 }
 
 const char * ParsedJson::iterator::get_string() const {
-    return  reinterpret_cast<const char *>(pj.string_buf + (current_val & JSONVALUEMASK)) ;
+   return  reinterpret_cast<const char *>(pj.string_buf + (current_val & JSONVALUEMASK) + sizeof(uint32_t)) ;
 }
 
+
+uint32_t ParsedJson::iterator::get_string_length() const {
+    uint32_t answer;
+    memcpy(&answer, reinterpret_cast<const char *>(pj.string_buf + (current_val & JSONVALUEMASK)), sizeof(uint32_t));
+    return answer;
+}
 
 bool ParsedJson::iterator::is_object_or_array() const {
     return is_object_or_array(get_type());
@@ -1707,14 +1727,15 @@ bool ParsedJson::iterator::is_object_or_array(uint8_t type) {
 
 bool ParsedJson::iterator::move_to_key(const char * key) {
     if(down()) {
-    do {
+      do {
         assert(is_string());
-        bool rightkey = (strcmp(get_string(),key)==0);
+        bool rightkey = (strcmp(get_string(),key)==0);// null chars would fool this
         next();
-        if(rightkey) { return true;
-}
-    } while(next());
-    assert(up());// not found
+        if(rightkey) { 
+          return true;
+        }
+      } while(next());
+      assert(up());// not found
     }
     return false;
 }
@@ -1813,15 +1834,17 @@ void ParsedJson::iterator::to_start_scope()  {
 }
 
 bool ParsedJson::iterator::print(std::ostream &os, bool escape_strings) const {
-    if(!isOk()) { return false;
-}
+    if(!isOk()) { 
+      return false;
+    }
     switch (current_type) {
     case '"': // we have a string
     os << '"';
     if(escape_strings) {
-        print_with_escapes(get_string(), os);
+        print_with_escapes(get_string(), os, get_string_length());
     } else {
-        os << get_string();
+        // was: os << get_string();, but given that we can include null chars, we have to do something crazier:
+        std::copy(get_string(), get_string() + get_string_length(), std::ostream_iterator<char>(os));
     }
     os << '"';
     break;

@@ -115,6 +115,8 @@ namespace SimdJsonSharp
 
     public unsafe class ParsedJsonIteratorN : IDisposable
     {
+        internal static readonly UTF8Encoding _utf8Encoding = new UTF8Encoding(false, true);
+
         public void* Handle { get; private set; }
         public ParsedJsonIteratorN(void* handle) => this.Handle = handle;
         public ParsedJsonIteratorN(ParsedJsonN pj) => Handle = iterator_iterator(pj.Handle);
@@ -127,7 +129,8 @@ namespace SimdJsonSharp
         public uint8_t CurrentType => iterator_get_type(Handle);
         public int64_t GetInteger() => iterator_get_integer(Handle);
         public bytechar* GetUtf8String() => iterator_get_string(Handle);
-        public string GetUtf16String() => new string(iterator_get_string(Handle)); // SLOW! update once https://github.com/lemire/simdjson/pull/101 is merged
+        public uint32_t GetUtf8StringLength() => iterator_get_string_length(Handle);
+        public string GetUtf16String() => _utf8Encoding.GetString((byte*)iterator_get_string(Handle), (int)iterator_get_string_length(Handle));
         public double GetDouble() => iterator_get_double(Handle);
         public bool IsObjectOrArray => iterator_is_object_or_array(Handle) > 0;
         public bool IsObject => iterator_is_object(Handle) > 0;
@@ -153,6 +156,7 @@ namespace SimdJsonSharp
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_get_type(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern int64_t iterator_get_integer(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern bytechar* iterator_get_string(void* target);
+        [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint32_t iterator_get_string_length(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern double iterator_get_double(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_is_object_or_array(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_is_object(void* target);

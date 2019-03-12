@@ -30,6 +30,7 @@ EXPORTS(bool) iterator_move_forward(ParsedJson::iterator* target) { return targe
 EXPORTS(uint8_t) iterator_get_type(ParsedJson::iterator* target) { return target->get_type(); }
 EXPORTS(int64_t) iterator_get_integer(ParsedJson::iterator* target) { return target->get_integer(); }
 EXPORTS(const char*) iterator_get_string(ParsedJson::iterator* target) { return target->get_string(); }
+EXPORTS(uint32_t) iterator_get_string_length(ParsedJson::iterator* target) { return target->get_string_length(); }
 EXPORTS(double) iterator_get_double(ParsedJson::iterator* target) { return target->get_double(); }
 EXPORTS(bool) iterator_is_object_or_array(ParsedJson::iterator* target) { return target->is_object_or_array(); }
 EXPORTS(bool) iterator_is_object(ParsedJson::iterator* target) { return target->is_object(); }
