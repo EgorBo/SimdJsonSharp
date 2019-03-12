@@ -16,15 +16,15 @@ namespace SimdJsonSharp
     {
         public const string NativeLib = @"SimdJsonNative";
 
-        public static uint JsonMinify(uint8_t* buf, int len, uint8_t* output) => (uint)Global_jsonminify(buf, (size_t)len, output);
+        public static uint JsonMinify(byte* jsonDataPtr, int jsonDataLength, uint8_t* output) => (uint)Global_jsonminify(jsonDataPtr, (size_t)jsonDataLength, output);
 
-        public static ParsedJsonN ParseJson(uint8_t* buf, int len, bool reallocifneeded = true)
+        public static ParsedJsonN ParseJson(byte* jsonDataPtr, int jsonDataLength, bool reallocifneeded = true)
         {
             ParsedJsonN pj = new ParsedJsonN();
-            bool ok = pj.AllocateCapacity((uint32_t)len);
+            bool ok = pj.AllocateCapacity((uint32_t)jsonDataLength);
             if (ok)
             {
-                Global_json_parse(buf, (size_t)len, pj.Handle, reallocifneeded);
+                Global_json_parse(jsonDataPtr, (size_t)jsonDataLength, pj.Handle, reallocifneeded);
             }
             else
             {
@@ -80,11 +80,7 @@ namespace SimdJsonSharp
             }
         }
 
-        ~ParsedJsonN()
-        {
-            if (Handle != (void*)IntPtr.Zero)
-                Dispose();
-        }
+        ~ParsedJsonN() => Dispose();
     }
 
     public unsafe class ParsedJsonIteratorN : IDisposable
@@ -101,6 +97,7 @@ namespace SimdJsonSharp
         public uint8_t CurrentType => iterator_get_type(Handle);
         public int64_t GetInteger() => iterator_get_integer(Handle);
         public bytechar* GetUtf8String() => iterator_get_string(Handle);
+        public string GetUtf16String() => new string(iterator_get_string(Handle)); // SLOW! update once https://github.com/lemire/simdjson/pull/101 is merged
         public double GetDouble() => iterator_get_double(Handle);
         public bool IsObjectOrArray => iterator_is_object_or_array(Handle);
         public bool IsObject => iterator_is_object(Handle);
@@ -152,9 +149,6 @@ namespace SimdJsonSharp
             }
         }
 
-        ~ParsedJsonIteratorN()
-        {
-            if (Handle != (void*)IntPtr.Zero) Dispose();
-        }
+        ~ParsedJsonIteratorN() => Dispose();
     }
 }
