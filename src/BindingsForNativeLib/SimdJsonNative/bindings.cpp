@@ -17,7 +17,7 @@ EXPORTS(void) ParsedJson_write_tape_s64(ParsedJson* target, int64_t i) { target-
 EXPORTS(void) ParsedJson_write_tape_double(ParsedJson* target, double d) { target->write_tape_double(d); }
 EXPORTS(uint32_t) ParsedJson_get_current_loc(ParsedJson* target) { return target->get_current_loc(); }
 EXPORTS(void) ParsedJson_annotate_previousloc(ParsedJson* target, uint32_t saved_loc, uint64_t val) { target->annotate_previousloc(saved_loc, val); }
-EXPORTS(void) ParsedJson_dispose(ParsedJson* target) { target->~ParsedJson(); }
+EXPORTS(void) ParsedJson_dispose(ParsedJson* target) { delete target; }
 
 // ParsedJson::iterator
 EXPORTS(ParsedJson::iterator*) iterator_iterator(ParsedJson* pj) { return new ParsedJson::iterator(*pj); }
@@ -44,7 +44,7 @@ EXPORTS(bool) iterator_up(ParsedJson::iterator* target) { return target->up(); }
 EXPORTS(bool) iterator_down(ParsedJson::iterator* target) { return target->down(); }
 EXPORTS(void) iterator_to_start_scope(ParsedJson::iterator* target) { target->to_start_scope(); }
 EXPORTS(bool) iterator_is_object_or_array_static(uint8_t type) { return ParsedJson::iterator::is_object_or_array(type); }
-EXPORTS(void) iterator_dispose(ParsedJson::iterator* target) { target->~iterator(); }
+EXPORTS(void) iterator_dispose(ParsedJson::iterator* target) { delete target; }
 
 // Global
 EXPORTS(char*) Global_allocate_padded_buffer(size_t length) { return allocate_padded_buffer(length); }
