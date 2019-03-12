@@ -34,6 +34,32 @@ namespace Benchmarks
             return wordsCount;
         }
 
+        //[Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public unsafe ulong _SimdJsonNative(byte[] data, string fileName, string fileSize)
+        {
+            ulong wordsCount = 0;
+            fixed (byte* dataPtr = data)
+            {
+                using (ParsedJsonN doc = SimdJsonN.ParseJson(dataPtr, data.Length))
+                using (var iterator = new ParsedJsonIteratorN(doc))
+                {
+                    while (iterator.MoveForward())
+                    {
+                        if (iterator.IsString)
+                        {
+                            // count all strings starting with 'a' 
+                            // NOTE: it could be much faster with direct UTF8 API: (*iterator.GetUtf8String()) == (byte)'a')
+                            if (iterator.GetUtf16String().StartsWith('a'))
+                                wordsCount++;
+                        }
+                    }
+                }
+            }
+
+            return wordsCount;
+        }
+
         [Benchmark]
         [ArgumentsSource(nameof(TestData))]
         public ulong _Utf8JsonReader(byte[] data, string fileName, string fileSize)

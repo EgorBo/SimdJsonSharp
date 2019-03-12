@@ -16,6 +16,14 @@ namespace Benchmarks
             return SimdJson.MinifyJson(json);
         }
 
+        //[Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public string _SimdJsonNativeWithoutValidation(byte[] jsonData, string fileName, string fileSize)
+        {
+            string json = Encoding.UTF8.GetString(jsonData);
+            return SimdJsonN.MinifyJson(json);
+        }
+
         [Benchmark]
         [ArgumentsSource(nameof(TestData))]
         public unsafe string _SimdJson(byte[] jsonData, string fileName, string fileSize)

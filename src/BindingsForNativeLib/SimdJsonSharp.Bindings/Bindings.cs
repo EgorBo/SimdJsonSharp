@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 #region stdint types and friends
 using size_t = System.IntPtr; // IntPtr here!!
@@ -16,7 +17,23 @@ namespace SimdJsonSharp
     {
         public const string NativeLib = @"SimdJsonNative";
 
-        public static uint JsonMinify(byte* jsonDataPtr, int jsonDataLength, uint8_t* output) => (uint)Global_jsonminify(jsonDataPtr, (size_t)jsonDataLength, output);
+        public static uint MinifyJson(byte* jsonDataPtr, int jsonDataLength, uint8_t* output) => (uint)Global_jsonminify(jsonDataPtr, (size_t)jsonDataLength, output);
+
+        public static string MinifyJson(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+            byte[] outputBytes = new byte[input.Length]; // no Span<T> and ArrayPool in ns2.0
+
+            fixed (byte* inputBytesPtr = inputBytes)
+            fixed (byte* outputBytesPtr = outputBytes)
+            {
+                uint bytesWritten = MinifyJson(inputBytesPtr, inputBytes.Length, outputBytesPtr);
+                return Encoding.UTF8.GetString(outputBytes, 0, (int)bytesWritten);
+            }
+        }
 
         public static ParsedJsonN ParseJson(byte* jsonDataPtr, int jsonDataLength, bool reallocifneeded = true)
         {
