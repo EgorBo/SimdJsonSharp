@@ -10,7 +10,7 @@ using int64_t = System.Int64;
 using bytechar = System.SByte;
 #endregion
 
-namespace HelloWorld
+namespace SimdJsonSharp
 {
     public static unsafe class SimdJsonN // 'N' stands for Native
     {

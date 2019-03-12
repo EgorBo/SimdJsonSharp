@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Text.Json;
 using BenchmarkDotNet.Attributes;
-using HelloWorld;
 using Newtonsoft.Json;
 using SimdJsonSharp;
 
