@@ -37,7 +37,7 @@
 
   <ItemGroup Condition="Exists('..\..\..\Bin\libSimdJsonNative.dylib')">
     <Content Include="..\..\..\Bin\libSimdJsonNative.dylib" Link="libSimdJsonNative.dylib">
-      <PackagePath>runtimes/win-x64/native/libSimdJsonNative.dylib</PackagePath>
+      <PackagePath>runtimes/osx-x64/native/libSimdJsonNative.dylib</PackagePath>
       <Pack>true</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
