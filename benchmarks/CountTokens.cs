@@ -19,22 +19,17 @@ namespace Benchmarks
                 using (var iterator = new ParsedJsonIterator(doc))
                 {
                     while (iterator.MoveForward())
-                    {
                         if (iterator.IsDouble || iterator.IsInteger)
-                        {
-                            if (iterator.GetDouble() > 42000)
-                                numbersCount++;
-                        }
-                    }
+                            numbersCount++;
                 }
             }
 
             return numbersCount;
         }
 
-        //[Benchmark]
+        [Benchmark]
         [ArgumentsSource(nameof(TestData))]
-        public unsafe ulong _SimdJsonNative(byte[] data, string fileName, string fileSize)
+        public unsafe ulong _SimdJsonN(byte[] data, string fileName, string fileSize)
         {
             ulong numbersCount = 0;
             fixed (byte* dataPtr = data)
@@ -43,13 +38,8 @@ namespace Benchmarks
                 using (var iterator = new ParsedJsonIteratorN(doc))
                 {
                     while (iterator.MoveForward())
-                    {
-                        if (iterator.IsDouble || iterator.IsInteger)
-                        {
-                            if (iterator.GetDouble() > 42000)
-                                numbersCount++;
-                        }
-                    }
+                        //if (iterator.IsDouble || iterator.IsInteger)
+                            numbersCount++;
                 }
             }
 
@@ -65,10 +55,7 @@ namespace Benchmarks
             while (reader.Read())
             {
                 if (reader.TokenType == JsonTokenType.Number)
-                {
-                    if (reader.GetDouble() > 42000)
-                        numbersCount++;
-                }
+                    numbersCount++;
             }
 
             return numbersCount;
@@ -86,10 +73,7 @@ namespace Benchmarks
                 {
                     if (reader.TokenType == JsonToken.Float || 
                         reader.TokenType == JsonToken.Integer)
-                    {
-                        if (reader.ReadAsDouble() > 42000)
-                            numbersCount++;
-                    }
+                        numbersCount++;
                 }
             }
 
@@ -106,10 +90,7 @@ namespace Benchmarks
             while ((token = reader.ReadUtf8NextToken()) != SpanJson.JsonToken.None)
             {
                 if (token == SpanJson.JsonToken.Number)
-                {
-                    if (reader.ReadDouble() > 42000)
-                        numbersCount++;
-                }
+                    numbersCount++;
                 reader.SkipNextUtf8Value(token);
             }
 

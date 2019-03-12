@@ -10,7 +10,7 @@ namespace Benchmarks
     {
         [Benchmark(Baseline = true)]
         [ArgumentsSource(nameof(TestData))]
-        public unsafe ulong _SimdJson(byte[] data, string fileName, string fileSize)
+        public unsafe ulong SimdJsonUtf16(byte[] data, string fileName, string fileSize)
         {
             ulong wordsCount = 0;
             fixed (byte* dataPtr = data)
@@ -22,8 +22,6 @@ namespace Benchmarks
                     {
                         if (iterator.IsString)
                         {
-                            // count all strings starting with 'a' 
-                            // NOTE: it could be much faster with direct UTF8 API: (*iterator.GetUtf8String()) == (byte)'a')
                             if (iterator.GetUtf16String().StartsWith('a'))
                                 wordsCount++;
                         }
@@ -36,7 +34,7 @@ namespace Benchmarks
 
         //[Benchmark]
         [ArgumentsSource(nameof(TestData))]
-        public unsafe ulong _SimdJsonNative(byte[] data, string fileName, string fileSize)
+        public unsafe ulong SimdJsonNUtf16(byte[] data, string fileName, string fileSize)
         {
             ulong wordsCount = 0;
             fixed (byte* dataPtr = data)
@@ -48,9 +46,54 @@ namespace Benchmarks
                     {
                         if (iterator.IsString)
                         {
-                            // count all strings starting with 'a' 
-                            // NOTE: it could be much faster with direct UTF8 API: (*iterator.GetUtf8String()) == (byte)'a')
-                            if (iterator.GetUtf16String().StartsWith('a'))
+                            if (iterator.GetUtf16String().StartsWith('a')) // UTF16 in SimdJsonN is expected to be slow for now (see https://github.com/lemire/simdjson/pull/101)
+                                wordsCount++;
+                        }
+                    }
+                }
+            }
+
+            return wordsCount;
+        }
+        [Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public unsafe ulong SimdJsonUtf8(byte[] data, string fileName, string fileSize)
+        {
+            ulong wordsCount = 0;
+            fixed (byte* dataPtr = data)
+            {
+                using (ParsedJson doc = SimdJson.ParseJson(dataPtr, data.Length))
+                using (var iterator = new ParsedJsonIterator(doc))
+                {
+                    while (iterator.MoveForward())
+                    {
+                        if (iterator.IsString)
+                        {
+                            if (*iterator.GetUtf8String() == (byte)'a')
+                                wordsCount++;
+                        }
+                    }
+                }
+            }
+
+            return wordsCount;
+        }
+
+        //[Benchmark]
+        [ArgumentsSource(nameof(TestData))]
+        public unsafe ulong SimdJsonNUtf8(byte[] data, string fileName, string fileSize)
+        {
+            ulong wordsCount = 0;
+            fixed (byte* dataPtr = data)
+            {
+                using (ParsedJsonN doc = SimdJsonN.ParseJson(dataPtr, data.Length))
+                using (var iterator = new ParsedJsonIteratorN(doc))
+                {
+                    while (iterator.MoveForward())
+                    {
+                        if (iterator.IsString)
+                        {
+                            if (*iterator.GetUtf8String() == (byte)'a')
                                 wordsCount++;
                         }
                     }

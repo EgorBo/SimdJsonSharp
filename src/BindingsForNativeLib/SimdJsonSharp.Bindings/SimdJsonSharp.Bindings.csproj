@@ -14,7 +14,7 @@
     <Copyright>(c) lemire, EgorBo</Copyright>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageIconUrl>https://raw.githubusercontent.com/EgorBo/SimdJsonSharp/master/images/logo.png</PackageIconUrl>
-    <Version>1.2</Version>
+    <Version>1.4</Version>
     <OutputPath>..\..\..\Bin\</OutputPath>
   </PropertyGroup>
   

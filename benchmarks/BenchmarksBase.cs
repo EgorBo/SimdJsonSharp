@@ -15,18 +15,19 @@ namespace Benchmarks
     {
         private class ConfigWithCustomEnvVars : ManualConfig
         {
-            private const string JitNoInline = "COMPlus_TieredCompilation";
+            private const string JitTieredCompilation = "COMPlus_TieredCompilation";
 
             public ConfigWithCustomEnvVars()
             {
-                Add(Job.Core.With(new[] { new EnvironmentVariable(JitNoInline, "1") }));
+                Add(Job.ShortRun.With(new[] { new EnvironmentVariable(JitTieredCompilation, "1") }));
+                Add(Job.ShortRun.With(new[] { new EnvironmentVariable(JitTieredCompilation, "0") }));
             }
         }
 
         public IEnumerable<object[]> TestData()
         {
             var testDataDir = @"C:\prj\simdjsonsharp\jsonexamples"; // TODO: fix absolute path
-            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories).Take(5).ToArray();
+            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories).ToArray();
 
             foreach (var file in files)
             {

@@ -34,6 +34,21 @@ namespace SimdJsonSharp.Tests
         }
 
         [Fact]
+        public unsafe void ValidateAllFilesN()
+        {
+            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories);
+            // 20 files, ~15Mb of JSON
+            Assert.NotEmpty(files);
+            foreach (string file in files)
+            {
+                byte[] fileData = File.ReadAllBytes(file);
+                fixed (byte* ptr = fileData)
+                    using (ParsedJsonN doc = SimdJsonN.ParseJson(ptr, fileData.Length))
+                        Assert.True(doc.IsValid);
+            }
+        }
+
+        [Fact]
         public unsafe void ValidateStrings()
         {
             string invalidJson = @"{ ""name"": ""\udc00\ud800\uggggxy"" }";
