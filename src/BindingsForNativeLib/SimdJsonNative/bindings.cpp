@@ -1,6 +1,5 @@
 #include "simdjson.h"
 
-
 #if (defined WIN32 || defined _WIN32)
 #define EXPORTS(returntype) extern "C" __declspec(dllexport) returntype __cdecl
 #else
@@ -8,12 +7,7 @@
 #endif
 
 // ParsedJson
-EXPORTS(ParsedJson*) ParsedJson_ParsedJson()
-{
-	ParsedJson* pj = new ParsedJson();
-
-	return pj;
-}
+EXPORTS(ParsedJson*) ParsedJson_ParsedJson() { return new ParsedJson(); }
 EXPORTS(bool) ParsedJson_allocateCapacity(ParsedJson* target, size_t len, size_t maxdepth = DEFAULTMAXDEPTH) { return target->allocateCapacity(len, maxdepth); }
 EXPORTS(bool) ParsedJson_isValid(ParsedJson* target) { return target->isValid(); }
 EXPORTS(void) ParsedJson_deallocate(ParsedJson* target) { target->deallocate(); }
@@ -26,13 +20,7 @@ EXPORTS(void) ParsedJson_annotate_previousloc(ParsedJson* target, uint32_t saved
 EXPORTS(void) ParsedJson_dispose(ParsedJson* target) { target->~ParsedJson(); }
 
 // ParsedJson::iterator
-EXPORTS(void*) iterator_iterator(void* pj)
-{
-	ParsedJson* cc = static_cast<ParsedJson*>(pj);
-	auto len = cc->bytecapacity;
-
-	return new ParsedJson::iterator(*cc);
-}
+EXPORTS(ParsedJson::iterator*) iterator_iterator(ParsedJson* pj) { return new ParsedJson::iterator(*pj); }
 EXPORTS(bool) iterator_isOk(ParsedJson::iterator* target) { return target->isOk(); }
 EXPORTS(size_t) iterator_get_tape_location(ParsedJson::iterator* target) { return target->get_tape_location(); }
 EXPORTS(size_t) iterator_get_tape_length(ParsedJson::iterator* target) { return target->get_tape_length(); }

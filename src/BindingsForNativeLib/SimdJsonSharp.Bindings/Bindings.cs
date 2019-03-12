@@ -16,12 +16,12 @@ namespace SimdJsonSharp
     {
         public const string NativeLib = @"SimdJsonNative";
 
-        public static uint JsonMinify(uint8_t* buf, uint len, uint8_t* output) => (uint)Global_jsonminify(buf, (size_t)len, output);
+        public static uint JsonMinify(uint8_t* buf, int len, uint8_t* output) => (uint)Global_jsonminify(buf, (size_t)len, output);
 
-        public static ParsedJsonN ParseJson(uint8_t* buf, uint len, bool reallocifneeded = true)
+        public static ParsedJsonN ParseJson(uint8_t* buf, int len, bool reallocifneeded = true)
         {
             ParsedJsonN pj = new ParsedJsonN();
-            bool ok = pj.AllocateCapacity(len);
+            bool ok = pj.AllocateCapacity((uint32_t)len);
             if (ok)
             {
                 Global_json_parse(buf, (size_t)len, pj.Handle, reallocifneeded);
@@ -47,7 +47,7 @@ namespace SimdJsonSharp
         public ParsedJsonN(void* handle) => this.Handle = handle;
         public ParsedJsonN() => Handle = ParsedJson_ParsedJson();
         public bool AllocateCapacity(uint len, uint maxdepth = 1024) => ParsedJson_allocateCapacity(Handle, len, maxdepth);
-        public bool IsValid() => ParsedJson_isValid(Handle);
+        public bool IsValid => ParsedJson_isValid(Handle);
         public void Deallocate() => ParsedJson_deallocate(Handle);
         public void Init() => ParsedJson_init(Handle);
         public void WriteTape(uint64_t val, uint8_t c) => ParsedJson_write_tape(Handle, val, c);

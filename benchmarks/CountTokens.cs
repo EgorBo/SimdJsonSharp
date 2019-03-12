@@ -39,7 +39,7 @@ namespace Benchmarks
             ulong numbersCount = 0;
             fixed (byte* dataPtr = data)
             {
-                using (ParsedJsonN doc = SimdJsonN.ParseJson(dataPtr, (uint)data.Length))
+                using (ParsedJsonN doc = SimdJsonN.ParseJson(dataPtr, data.Length))
                 using (var iterator = new ParsedJsonIteratorN(doc))
                 {
                     while (iterator.MoveForward())
