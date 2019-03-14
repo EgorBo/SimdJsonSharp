@@ -1,5 +1,5 @@
 ﻿// This file is a manual port of C code https://github.com/lemire/simdjson to C#
-// (c) Daniel Lemire
+// (c) Daniel Lemire and Geoff Langdale
 
 #define CHECKUNESCAPED
 using System;

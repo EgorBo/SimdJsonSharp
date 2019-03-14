@@ -5,7 +5,7 @@
     <Authors>EgorBo</Authors>
     <Description>
       SimdJson.Bindings: Parsing gigabytes of JSON per second.
-      C# bindings for Daniel Lemire's SimdJson (written in C).
+      C# bindings for lemire/simdjson (written in C++).
     </Description>
     <PackageLicenseUrl>https://github.com/EgorBo/SimdJsonSharp/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/EgorBo/SimdJsonSharp</PackageProjectUrl>

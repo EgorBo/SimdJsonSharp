@@ -7,7 +7,7 @@
     <DefineConstants>JSON_MINIFY</DefineConstants>
     <Authors>EgorBo</Authors>
     <Description>SimdJson: Parsing gigabytes of JSON per second.
-C# version of Daniel Lemire's SimdJson (written in C).
+C# version of lemire/simdjdon (written in C++).
 </Description>
     <PackageLicenseUrl>https://github.com/EgorBo/SimdJsonSharp/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/EgorBo/SimdJsonSharp</PackageProjectUrl>
