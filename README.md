@@ -1,5 +1,5 @@
 # SimdJsonSharp: Parsing gigabytes of JSON per second
-C# version of [limire/simdjson](https://github.com/lemire/simdjson) (by Daniel Lemire and Geoff Langdale - https://arxiv.org/abs/1902.08318) fully ported from C to C#, 
+C# version of [lemire/simdjson](https://github.com/lemire/simdjson) (by Daniel Lemire and Geoff Langdale - https://arxiv.org/abs/1902.08318) fully ported from C to C#, 
 I tried to keep the same format and API). The library accelerates JSON parsing and minification using 
 SIMD instructions (AVX2). C# version uses `System.Runtime.Intrinsics` API.
 
