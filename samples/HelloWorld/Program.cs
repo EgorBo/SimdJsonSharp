@@ -15,25 +15,21 @@ namespace ConsoleApp124
 
             fixed (byte* ptr = bytes)
             {
-                using (ParsedJson doc = SimdJson.ParseJson(ptr, bytes.Length))
+                // SimdJsonN -- N stands for Native, it means we are using Bindings for simdjson native lib
+                // SimdJson -- fully managed .NET Core 3.0 port
+                using (ParsedJsonN doc = SimdJsonN.ParseJson(ptr, bytes.Length))
                 {
                     Console.WriteLine($"Is json valid:{doc.IsValid}\n");
 
                     // open iterator:
-                    using (var iterator = new ParsedJsonIterator(doc))
+                    using (var iterator = new ParsedJsonIteratorN(doc))
                     {
                         while (iterator.MoveForward())
                         {
-                            switch (iterator.GetTokenType())
-                            {
-                                case JsonTokenType.Number:
-                                    Console.WriteLine("integer: " + iterator.GetInteger());
-                                    break;
-
-                                case JsonTokenType.String:
-                                    Console.WriteLine("string: " + iterator.GetUtf16String());
-                                    break;
-                            }
+                            if (iterator.IsInteger)
+                                Console.WriteLine("integer: " + iterator.GetInteger());
+                            if (iterator.IsString)
+                                Console.WriteLine("string: " + iterator.GetUtf16String());
                         }
                     }
                 }

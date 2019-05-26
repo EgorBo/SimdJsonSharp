@@ -38,6 +38,9 @@ EXPORTS(bool) iterator_is_array(ParsedJson::iterator* target) { return target->i
 EXPORTS(bool) iterator_is_string(ParsedJson::iterator* target) { return target->is_string(); }
 EXPORTS(bool) iterator_is_integer(ParsedJson::iterator* target) { return target->is_integer(); }
 EXPORTS(bool) iterator_is_double(ParsedJson::iterator* target) { return target->is_double(); }
+EXPORTS(bool) iterator_is_true(ParsedJson::iterator* target) { return target->is_true(); }
+EXPORTS(bool) iterator_is_false(ParsedJson::iterator* target) { return target->is_false(); }
+EXPORTS(bool) iterator_is_null(ParsedJson::iterator* target) { return target->is_null(); }
 EXPORTS(bool) iterator_move_to_key(ParsedJson::iterator* target, char* key) { return target->move_to_key(key); }
 EXPORTS(bool) iterator_next(ParsedJson::iterator* target) { return target->next(); }
 EXPORTS(bool) iterator_prev(ParsedJson::iterator* target) { return target->prev(); }

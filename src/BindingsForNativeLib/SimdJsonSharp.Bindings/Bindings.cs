@@ -138,6 +138,9 @@ namespace SimdJsonSharp
         public bool IsString => iterator_is_string(Handle) > 0;
         public bool IsInteger => iterator_is_integer(Handle) > 0;
         public bool IsDouble => iterator_is_double(Handle) > 0;
+        public bool IsTrue => iterator_is_true(Handle) > 0;
+        public bool IsFalse => iterator_is_false(Handle) > 0;
+        public bool IsNull => iterator_is_null(Handle) > 0;
         public bool MoveToKey(bytechar* key) => iterator_move_to_key(Handle, key) > 0;
         public bool Next() => iterator_next(Handle) > 0;
         public bool Prev() => iterator_prev(Handle) > 0;
@@ -164,6 +167,9 @@ namespace SimdJsonSharp
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_is_string(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_is_integer(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_is_double(void* target);
+        [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_is_true(void* target);
+        [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_is_false(void* target);
+        [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_is_null(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_move_to_key(void* target, bytechar* key);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_next(void* target);
         [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern uint8_t iterator_prev(void* target);
