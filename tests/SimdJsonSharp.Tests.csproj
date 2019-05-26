@@ -18,7 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\src\BindingsForNativeLib\SimdJsonSharp.Bindings\SimdJsonSharp.Bindings.csproj" />
     <ProjectReference Include="..\src\FullyManagedImpl\SimdJsonSharp.Managed.csproj" />
-    <ProjectReference Include="..\src\SimdJsonSharp.csproj" />
   </ItemGroup>
 
 </Project>
