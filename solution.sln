@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimdJsonNative", "src\Bindi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimdJsonSharp.Bindings", "src\BindingsForNativeLib\SimdJsonSharp.Bindings\SimdJsonSharp.Bindings.csproj", "{399AA870-D18B-40BB-AAB2-4DFDDB7B8DE6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BindingsGenerator", "src\BindingsForNativeLib\BindingsGenerator\BindingsGenerator.csproj", "{F6024B33-8886-47AD-A504-24879BFC0A42}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +123,18 @@ Global
 		{399AA870-D18B-40BB-AAB2-4DFDDB7B8DE6}.Release|x64.Build.0 = Release|Any CPU
 		{399AA870-D18B-40BB-AAB2-4DFDDB7B8DE6}.Release|x86.ActiveCfg = Release|Any CPU
 		{399AA870-D18B-40BB-AAB2-4DFDDB7B8DE6}.Release|x86.Build.0 = Release|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Debug|x64.Build.0 = Debug|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Debug|x86.Build.0 = Debug|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Release|x64.ActiveCfg = Release|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Release|x64.Build.0 = Release|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Release|x86.ActiveCfg = Release|Any CPU
+		{F6024B33-8886-47AD-A504-24879BFC0A42}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -135,6 +149,7 @@ Global
 		{5668BADB-B2CF-4E1A-A885-DC10B11D26B2} = {6DD8E0E9-0838-4299-B9B0-E0B75830CCF0}
 		{B688E099-77FF-46D9-B61B-5C6D718DDBFB} = {5668BADB-B2CF-4E1A-A885-DC10B11D26B2}
 		{399AA870-D18B-40BB-AAB2-4DFDDB7B8DE6} = {5668BADB-B2CF-4E1A-A885-DC10B11D26B2}
+		{F6024B33-8886-47AD-A504-24879BFC0A42} = {5668BADB-B2CF-4E1A-A885-DC10B11D26B2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1154050C-AA23-4D3A-80C0-923978F0E163}
