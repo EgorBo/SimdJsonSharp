@@ -53,7 +53,7 @@ namespace Benchmarks
             fixed (byte* dataPtr = jsonData)
             {
                 using (var doc = SimdJsonN.ParseJson(dataPtr, jsonData.Length))
-                    if (!doc.IsValid)
+                    if (!doc.IsValid())
                         throw new InvalidOperationException("Json is invalid");
             }
 

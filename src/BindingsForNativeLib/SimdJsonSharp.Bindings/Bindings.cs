@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace SimdJsonSharp
 {
-    public static unsafe class SimdJsonN // 'N' stands for Native
+    public static unsafe partial class SimdJsonN // 'N' stands for Native
     {
         public const string NativeLib = @"SimdJsonNative";
 
-        public static uint MinifyJson(byte* jsonDataPtr, int jsonDataLength, byte* output) => 
-            (uint)Global_jsonminify(jsonDataPtr, (IntPtr)jsonDataLength, output);
+        public static uint MinifyJson(byte* jsonDataPtr, long jsonDataLength, byte* output) => 
+            (uint)JsonMinify(jsonDataPtr, jsonDataLength, output);
 
         public static string MinifyJson(byte[] inputBytes)
         {
@@ -38,13 +37,13 @@ namespace SimdJsonSharp
                 return ParseJson(jsonDataPtr, jsonData.Length);
         }
 
-        public static ParsedJsonN ParseJson(byte* jsonDataPtr, int jsonDataLength, bool reallocifneeded = true)
+        public static ParsedJsonN ParseJson(byte* jsonDataPtr, long jsonDataLength, bool reallocifneeded = true)
         {
             ParsedJsonN pj = new ParsedJsonN();
             bool ok = pj.AllocateCapacity((uint)jsonDataLength, 1024);
             if (ok)
             {
-                Global_json_parse(jsonDataPtr, (IntPtr)jsonDataLength, pj.Handle, reallocifneeded);
+                JsonParse(jsonDataPtr, jsonDataLength, pj, reallocifneeded);
             }
             else
             {
@@ -52,25 +51,14 @@ namespace SimdJsonSharp
             }
             return pj;
         }
-
-
-        #region pinvokes
-        [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern sbyte* Global_allocate_padded_buffer(IntPtr length);
-        [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr Global_jsonminify(byte* buf, IntPtr len, byte* output);
-        [DllImport(SimdJsonN.NativeLib, CallingConvention = CallingConvention.Cdecl)] private static extern int Global_json_parse(byte* buf, IntPtr len, void* pj, bool reallocifneeded = true);
-        #endregion
     }
 
     // Extend auto-generated stuff here
-
-    public unsafe partial class ParsedJsonN // 'N' stands for Native
-    {
-    }
 
     public unsafe partial class ParsedJsonIteratorN // 'N' stands for Native
     {
         internal static readonly UTF8Encoding _utf8Encoding = new UTF8Encoding(false, true);
 
-        public string GetUtf16String() => _utf8Encoding.GetString((byte*)iterator_get_string(Handle), (int)iterator_get_string_length(Handle));
+        public string GetUtf16String() => _utf8Encoding.GetString((byte*)GetUtf8String(), (int)GetStringLength());
     }
 }

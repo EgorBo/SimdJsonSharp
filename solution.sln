@@ -29,7 +29,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimdJsonNative", "src\Bindi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimdJsonSharp.Bindings", "src\BindingsForNativeLib\SimdJsonSharp.Bindings\SimdJsonSharp.Bindings.csproj", "{399AA870-D18B-40BB-AAB2-4DFDDB7B8DE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BindingsGenerator", "src\BindingsForNativeLib\BindingsGenerator\BindingsGenerator.csproj", "{F6024B33-8886-47AD-A504-24879BFC0A42}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BindingsGenerator", "src\BindingsForNativeLib\BindingsGenerator\BindingsGenerator.csproj", "{F6024B33-8886-47AD-A504-24879BFC0A42}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -101,7 +101,8 @@ Global
 		{D795C37F-D8D3-4B29-ADBA-548C6711D69B}.Release|x64.Build.0 = Release|Any CPU
 		{D795C37F-D8D3-4B29-ADBA-548C6711D69B}.Release|x86.ActiveCfg = Release|Any CPU
 		{D795C37F-D8D3-4B29-ADBA-548C6711D69B}.Release|x86.Build.0 = Release|Any CPU
-		{B688E099-77FF-46D9-B61B-5C6D718DDBFB}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{B688E099-77FF-46D9-B61B-5C6D718DDBFB}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{B688E099-77FF-46D9-B61B-5C6D718DDBFB}.Debug|Any CPU.Build.0 = Debug|x64
 		{B688E099-77FF-46D9-B61B-5C6D718DDBFB}.Debug|x64.ActiveCfg = Debug|x64
 		{B688E099-77FF-46D9-B61B-5C6D718DDBFB}.Debug|x64.Build.0 = Debug|x64
 		{B688E099-77FF-46D9-B61B-5C6D718DDBFB}.Debug|x86.ActiveCfg = Debug|Win32

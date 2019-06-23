@@ -59,7 +59,7 @@ namespace SimdJsonSharp.Tests
 
                 fixed (byte* outPtr = output)
                     using (ParsedJsonN doc = SimdJsonN.ParseJson(outPtr, output.Length))
-                        Assert.True(doc.IsValid);
+                        Assert.True(doc.IsValid());
             }
         }
     }

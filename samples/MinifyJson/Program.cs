@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Microsoft.Win32.SafeHandles;
 using SimdJsonSharp;
 
 namespace MinifyJson

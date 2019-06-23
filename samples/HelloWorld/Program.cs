@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using System.Text.Json;
 using SimdJsonSharp;
 
 namespace ConsoleApp124
@@ -9,6 +8,7 @@ namespace ConsoleApp124
     {
         static unsafe void Main(string[] args)
         {
+
             string helloWorldJson = @"{ ""answer"": 42, ""name"": ""Egor"" }";
             ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(helloWorldJson);
             // SimdJson is UTF8 only
@@ -19,16 +19,16 @@ namespace ConsoleApp124
                 // SimdJson -- fully managed .NET Core 3.0 port
                 using (ParsedJsonN doc = SimdJsonN.ParseJson(ptr, bytes.Length))
                 {
-                    Console.WriteLine($"Is json valid:{doc.IsValid}\n");
+                    Console.WriteLine($"Is json valid:{doc.IsValid()}\n");
 
                     // open iterator:
                     using (var iterator = new ParsedJsonIteratorN(doc))
                     {
                         while (iterator.MoveForward())
                         {
-                            if (iterator.IsInteger)
+                            if (iterator.IsInteger())
                                 Console.WriteLine("integer: " + iterator.GetInteger());
-                            if (iterator.IsString)
+                            if (iterator.IsString())
                                 Console.WriteLine("string: " + iterator.GetUtf16String());
                         }
                     }

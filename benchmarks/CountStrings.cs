@@ -44,7 +44,7 @@ namespace Benchmarks
                 {
                     while (iterator.MoveForward())
                     {
-                        if (iterator.IsString)
+                        if (iterator.IsString())
                         {
                             if (iterator.GetUtf16String().StartsWith('a')) // UTF16 in SimdJsonN is expected to be slow for now (see https://github.com/lemire/simdjson/pull/101)
                                 wordsCount++;
@@ -91,7 +91,7 @@ namespace Benchmarks
                 {
                     while (iterator.MoveForward())
                     {
-                        if (iterator.IsString)
+                        if (iterator.IsString())
                         {
                             if (*iterator.GetUtf8String() == (byte)'a')
                                 wordsCount++;

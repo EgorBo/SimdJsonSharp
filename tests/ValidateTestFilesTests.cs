@@ -44,7 +44,7 @@ namespace SimdJsonSharp.Tests
                 byte[] fileData = File.ReadAllBytes(file);
                 fixed (byte* ptr = fileData)
                     using (ParsedJsonN doc = SimdJsonN.ParseJson(ptr, fileData.Length))
-                        Assert.True(doc.IsValid);
+                        Assert.True(doc.IsValid());
             }
         }
 
