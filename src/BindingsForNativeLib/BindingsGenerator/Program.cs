@@ -50,6 +50,9 @@ namespace SimdJson
             // Register native types we don't want to bind (or any method with them in parameters)
             mapper.RegisterUnsupportedTypes(
                 "simdjson", // it's empty - we don't need it
+                "__m128i",
+                "simd_input",         
+                "utf8_checking_state",
                 "basic_string",      // TODO:
                 "basic_string_view", // TODO
                 "basic_ostream");    // TODO:
@@ -59,6 +62,7 @@ namespace SimdJson
             // Add additional stuff we want to see in the bindings.c
             templateManager
                 .AddToCHeader(@"#include ""simdjson.h""")
+                .AddToCHeader(@"using namespace simdjson;")
                 .SetGlobalFunctionsClassName("SimdJsonN");
 
             PinvokeGenerator.Generate(mapper,

@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CppAst" Version="0.5.7" />
-    <PackageReference Include="CppPinvokeGenerator" Version="0.1.2" />
+    <PackageReference Include="CppAst" Version="0.5.8" />
+    <PackageReference Include="CppPinvokeGenerator" Version="0.1.4" />
   </ItemGroup>
 
 </Project>
