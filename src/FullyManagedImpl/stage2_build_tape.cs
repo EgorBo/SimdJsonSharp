@@ -29,85 +29,98 @@ namespace SimdJsonSharp
     internal static unsafe class stage2_build_tape
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool is_valid_true_atom(uint8_t* loc)
-        {
-            const uint64_t tv = 2314885531981673076; //* (uint64_t*)"true    ";
-            const uint64_t mask4 = 0x00000000ffffffff;
+        internal static bool is_valid_true_atom(uint8_t* loc) {
+            uint64_t tv = 2314885531981673076; //* (uint64_t*)"true    ";
+            uint64_t mask4 = 0x00000000ffffffff;
             uint32_t error = 0;
             uint64_t locval; // we want to avoid unaligned 64-bit loads (undefined in C/C++)
+            // this can read up to 7 bytes beyond the buffer size, but we require
+            // SIMDJSON_PADDING of padding
             memcpy(&locval, loc, sizeof(uint64_t));
-            error = (uint32_t) ((locval & mask4) ^ tv);
+            error = (uint32_t)((locval & mask4) ^ tv);
             error |= is_not_structural_or_whitespace(loc[4]);
             return error == 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool is_valid_false_atom(uint8_t* loc)
-        {
-            const uint64_t fv = 2314885828568703334; //* (uint64_t*)"false   ";
-            const uint64_t mask5 = 0x000000ffffffffff;
-            uint32_t error = 0;
+        internal static bool is_valid_false_atom(uint8_t* loc) {
+            // We have to use an integer constant because the space in the cast
+            // below would lead to values illegally being qualified
+            // uint64_t fv = *reinterpret_cast<const uint64_t *>("false   ");
+            // using this constant (that is the same false) but nulls out the
+            // unused bits solves that
+            uint64_t fv = 0x00000065736c6166; // takes into account endianness
+            uint64_t mask5 = 0x000000ffffffffff;
+            // we can't use the 32 bit value for checking for errors otherwise
+            // the last character of false (it being 5 byte long!) would be
+            // ignored
+            uint64_t error = 0;
             uint64_t locval; // we want to avoid unaligned 64-bit loads (undefined in C/C++)
+            // this can read up to 7 bytes beyond the buffer size, but we require 
+            // SIMDJSON_PADDING of padding
             memcpy(&locval, loc, sizeof(uint64_t));
-            error = (uint32_t) ((locval & mask5) ^ fv);
+            error = (locval & mask5) ^ fv;
             error |= is_not_structural_or_whitespace(loc[5]);
             return error == 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool is_valid_null_atom(uint8_t* loc)
-        {
-            const uint64_t nv = 2314885532098524526; //* (uint64_t*)"null    ";
-            const uint64_t mask4 = 0x00000000ffffffff;
+        internal static bool is_valid_null_atom(uint8_t* loc) {
+            uint64_t nv = 2314885532098524526; //* (uint64_t*)"null    ";
+            uint64_t mask4 = 0x00000000ffffffff;
             uint32_t error = 0;
             uint64_t locval; // we want to avoid unaligned 64-bit loads (undefined in C/C++)
+            // this can read up to 7 bytes beyond the buffer size, but we require 
+            // SIMDJSON_PADDING of padding
             memcpy(&locval, loc, sizeof(uint64_t));
-            error = (uint32_t) ((locval & mask4) ^ nv);
+            error = (uint32_t)((locval & mask4) ^ nv);
             error |= is_not_structural_or_whitespace(loc[4]);
             return error == 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static JsonParseError unified_machine(bytechar *buf, size_t len, ParsedJson pj)
+        {
+            return unified_machine((uint8_t*)(buf), len, pj);
+        }
+
         internal static JsonParseError unified_machine(uint8_t* buf, size_t len, ParsedJson pj)
         {
+#if !ALLOW_SAME_PAGE_BUFFER_OVERRUN
+            memset((uint8_t*) buf + len, 0, SIMDJSON_PADDING); // to please valgrind
+#endif
             uint32_t i = 0; // index of the structural character (0,1,2,3...)
             uint32_t idx; // location of the structural character in the input (buf)
-            uint8_t c; // used to track the (structural) character we are looking at, updated
+            uint8_t c = 0; // used to track the (structural) character we are looking at, updated
             // by UPDATE_CHAR macro
             uint32_t depth = 0; // could have an arbitrary starting depth
-            pj.Init();
+            pj.Init(); // sets isvalid to false
             if (pj.bytecapacity < len)
-                return JsonParseError.Capacity;
+            {
+                pj.errorcode = JsonParseError.CAPACITY;
+                return pj.errorcode;
+            }
 
-            // this macro reads the next structural character, updating idx, i and c.
-            //C#: expanded directly everywhere
-            //void UPDATE_CHAR()
-            //{
-            //    idx = pj.structural_indexes[i++];
-            //    c = buf[idx];
-            //}
-
+            ////////////////////////////// START STATE /////////////////////////////
             pj.ret_address[depth] = (bytechar) 's';
             pj.containing_scope_offset[depth] = pj.CurrentLoc;
-            pj.WriteTape(0, (byte) 'r'); // r for root, 0 is going to get overwritten
+            pj.WriteTape(0, (uint8_t) 'r'); // r for root, 0 is going to get overwritten
             // the root is used, if nothing else, to capture the size of the tape
             depth++; // everything starts at depth = 1, depth = 0 is just for the root, the root may contain an object, an array or something else.
-            if (depth > pj.depthcapacity)
+            if (depth >= pj.depthcapacity)
             {
                 goto fail;
             }
 
-
-            //UPDATE_CHAR():
             idx = pj.structural_indexes[i++];
-            c = buf[idx];
-
+            c = buf[idx]; //UPDATE_CHAR()
             switch (c)
             {
                 case (uint8_t) '{':
                     pj.containing_scope_offset[depth] = pj.CurrentLoc;
                     pj.ret_address[depth] = (bytechar) 's';
                     depth++;
-                    if (depth > pj.depthcapacity)
+                    if (depth >= pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -118,7 +131,7 @@ namespace SimdJsonSharp
                     pj.containing_scope_offset[depth] = pj.CurrentLoc;
                     pj.ret_address[depth] = (bytechar) 's';
                     depth++;
-                    if (depth > pj.depthcapacity)
+                    if (depth >= pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -143,13 +156,18 @@ namespace SimdJsonSharp
                 }
                 case (uint8_t) 't':
                 {
-                    // we need to make a copy to make sure that the string is NULL terminated.
+                    // we need to make a copy to make sure that the string is space terminated.
                     // this only applies to the JSON document made solely of the true value.
                     // this will almost never be called in practice
-                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
+                    bytechar* copy = (bytechar*) (allocate<bytechar>(len + SIMDJSON_PADDING));
+                    if (copy == null)
+                    {
+                        goto fail;
+                    }
+
                     memcpy(copy, buf, len);
-                    copy[len] = (bytechar) '\0';
-                    if (!is_valid_true_atom((uint8_t*) copy + idx))
+                    copy[len] = (bytechar) ' ';
+                    if (!is_valid_true_atom((uint8_t*) (copy) + idx))
                     {
                         free(copy);
                         goto fail;
@@ -161,13 +179,18 @@ namespace SimdJsonSharp
                 }
                 case (uint8_t) 'f':
                 {
-                    // we need to make a copy to make sure that the string is NULL terminated.
+                    // we need to make a copy to make sure that the string is space terminated.
                     // this only applies to the JSON document made solely of the false value.
                     // this will almost never be called in practice
-                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
+                    bytechar* copy = (bytechar*) (allocate<bytechar>(len + SIMDJSON_PADDING));
+                    if (copy == null)
+                    {
+                        goto fail;
+                    }
+
                     memcpy(copy, buf, len);
-                    copy[len] = (bytechar) '\0';
-                    if (!is_valid_false_atom((uint8_t*) copy + idx))
+                    copy[len] = (bytechar) ' ';
+                    if (!is_valid_false_atom((uint8_t*) (copy) + idx))
                     {
                         free(copy);
                         goto fail;
@@ -179,13 +202,18 @@ namespace SimdJsonSharp
                 }
                 case (uint8_t) 'n':
                 {
-                    // we need to make a copy to make sure that the string is NULL terminated.
+                    // we need to make a copy to make sure that the string is space terminated.
                     // this only applies to the JSON document made solely of the null value.
                     // this will almost never be called in practice
-                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
+                    bytechar* copy = (bytechar*) (allocate<bytechar>(len + SIMDJSON_PADDING));
+                    if (copy == null)
+                    {
+                        goto fail;
+                    }
+
                     memcpy(copy, buf, len);
-                    copy[len] = (bytechar) '\0';
-                    if (!is_valid_null_atom((uint8_t*) copy + idx))
+                    copy[len] = (bytechar) ' ';
+                    if (!is_valid_null_atom((uint8_t*) (copy) + idx))
                     {
                         free(copy);
                         goto fail;
@@ -206,13 +234,20 @@ namespace SimdJsonSharp
                 case (uint8_t) '8':
                 case (uint8_t) '9':
                 {
-                    // we need to make a copy to make sure that the string is NULL terminated.
+                    // we need to make a copy to make sure that the string is space terminated.
                     // this is done only for JSON documents made of a sole number
-                    // this will almost never be called in practice
-                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
+                    // this will almost never be called in practice. We terminate with a space
+                    // because we do not want to allow NULLs in the middle of a number (whereas a
+                    // space in the middle of a number would be identified in stage 1).
+                    bytechar* copy = (bytechar*) (allocate<bytechar>(len + SIMDJSON_PADDING));
+                    if (copy == null)
+                    {
+                        goto fail;
+                    }
+
                     memcpy(copy, buf, len);
-                    copy[len] = (bytechar) '\0';
-                    if (!parse_number((uint8_t*) copy, pj, idx, false))
+                    copy[len] = (bytechar) ' ';
+                    if (!parse_number((uint8_t*) (copy), pj, idx, false))
                     {
                         free(copy);
                         goto fail;
@@ -226,10 +261,15 @@ namespace SimdJsonSharp
                     // we need to make a copy to make sure that the string is NULL terminated.
                     // this is done only for JSON documents made of a sole number
                     // this will almost never be called in practice
-                    bytechar* copy = allocate<bytechar>(len + SIMDJSON_PADDING);
+                    bytechar* copy = (bytechar*) (allocate<bytechar>(len + SIMDJSON_PADDING));
+                    if (copy == null)
+                    {
+                        goto fail;
+                    }
+
                     memcpy(copy, buf, len);
                     copy[len] = (bytechar) '\0';
-                    if (!parse_number((uint8_t*) copy, pj, idx, true))
+                    if (!parse_number((uint8_t*) (copy), pj, idx, true))
                     {
                         free(copy);
                         goto fail;
@@ -256,9 +296,8 @@ namespace SimdJsonSharp
             ////////////////////////////// OBJECT STATES /////////////////////////////
 
             object_begin:
-            //UPDATE_CHAR():
             idx = pj.structural_indexes[i++];
-            c = buf[idx];
+            c = buf[idx]; //UPDATE_CHAR()
             switch (c)
             {
                 case (uint8_t) '"':
@@ -277,17 +316,15 @@ namespace SimdJsonSharp
             }
 
             object_key_state:
-            //UPDATE_CHAR():
             idx = pj.structural_indexes[i++];
-            c = buf[idx];
+            c = buf[idx]; //UPDATE_CHAR()
             if (c != ':')
             {
                 goto fail;
             }
 
-            //UPDATE_CHAR():
             idx = pj.structural_indexes[i++];
-            c = buf[idx];
+            c = buf[idx]; //UPDATE_CHAR()
             switch (c)
             {
                 case (uint8_t) '"':
@@ -358,7 +395,7 @@ namespace SimdJsonSharp
                     pj.ret_address[depth] = (bytechar) 'o';
                     // we found an object inside an object, so we need to increment the depth
                     depth++;
-                    if (depth > pj.depthcapacity)
+                    if (depth >= pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -373,7 +410,7 @@ namespace SimdJsonSharp
                     pj.ret_address[depth] = (bytechar) 'o';
                     // we found an array inside an object, so we need to increment the depth
                     depth++;
-                    if (depth > pj.depthcapacity)
+                    if (depth >= pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -385,16 +422,14 @@ namespace SimdJsonSharp
             }
 
             object_continue:
-            //UPDATE_CHAR():
             idx = pj.structural_indexes[i++];
-            c = buf[idx];
+            c = buf[idx]; //UPDATE_CHAR()
             switch (c)
             {
                 case (uint8_t) ',':
-                    //UPDATE_CHAR():
                     idx = pj.structural_indexes[i++];
-                    c = buf[idx];
-                    if (c != (uint8_t) '"')
+                    c = buf[idx]; //UPDATE_CHAR()
+                    if (c != '"')
                     {
                         goto fail;
                     }
@@ -421,12 +456,11 @@ namespace SimdJsonSharp
             pj.WriteTape(pj.containing_scope_offset[depth], c);
             pj.AnnotatePreviousLoc(pj.containing_scope_offset[depth],
                 pj.CurrentLoc);
-            // goto saved_state
-            if (pj.ret_address[depth] == (uint8_t) 'a')
+            if (pj.ret_address[depth] == 'a')
             {
                 goto array_continue;
             }
-            else if (pj.ret_address[depth] == (uint8_t) 'o')
+            else if (pj.ret_address[depth] == 'o')
             {
                 goto object_continue;
             }
@@ -434,10 +468,9 @@ namespace SimdJsonSharp
 
             ////////////////////////////// ARRAY STATES /////////////////////////////
             array_begin:
-            //UPDATE_CHAR():
             idx = pj.structural_indexes[i++];
-            c = buf[idx];
-            if (c == ']')
+            c = buf[idx]; //UPDATE_CHAR()
+            if (c == (uint8_t) ']')
             {
                 goto scope_end; // could also go to array_continue
             }
@@ -516,7 +549,7 @@ namespace SimdJsonSharp
                     pj.ret_address[depth] = (bytechar) 'a';
                     // we found an object inside an array, so we need to increment the depth
                     depth++;
-                    if (depth > pj.depthcapacity)
+                    if (depth >= pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -531,7 +564,7 @@ namespace SimdJsonSharp
                     pj.ret_address[depth] = (bytechar) 'a';
                     // we found an array inside an array, so we need to increment the depth
                     depth++;
-                    if (depth > pj.depthcapacity)
+                    if (depth >= pj.depthcapacity)
                     {
                         goto fail;
                     }
@@ -543,22 +576,19 @@ namespace SimdJsonSharp
             }
 
             array_continue:
-            //UPDATE_CHAR():
             idx = pj.structural_indexes[i++];
-            c = buf[idx];
+            c = buf[idx]; //UPDATE_CHAR()
             switch (c)
             {
                 case (uint8_t) ',':
-                    //UPDATE_CHAR():
                     idx = pj.structural_indexes[i++];
-                    c = buf[idx];
+                    c = buf[idx]; //UPDATE_CHAR()
                     goto main_array_switch;
                 case (uint8_t) ']':
                     goto scope_end;
                 default:
                     goto fail;
             }
-
 
             ////////////////////////////// FINAL STATES /////////////////////////////
 
@@ -567,22 +597,68 @@ namespace SimdJsonSharp
             if (depth != 0)
             {
                 throw new InvalidOperationException("internal bug");
+                //abort();
             }
 
             if (pj.containing_scope_offset[depth] != 0)
             {
                 throw new InvalidOperationException("internal bug");
+                //abort();
             }
 
             pj.AnnotatePreviousLoc(pj.containing_scope_offset[depth], pj.CurrentLoc);
-            pj.WriteTape(pj.containing_scope_offset[depth], (byte) 'r'); // r is root
+            pj.WriteTape(pj.containing_scope_offset[depth], (uint8_t) 'r'); // r is root
+
             pj.isvalid = true;
-            return JsonParseError.Success;
-
-
-
+            pj.errorcode = JsonParseError.SUCCESS;
+            return pj.errorcode;
             fail:
-            return JsonParseError.TapeError;
+            // we do not need the next line because this is done by pj.init(), pessimistically.
+            // pj.isvalid  = false;
+            // At this point in the code, we have all the time in the world.
+            // Note that we know exactly where we are in the document so we could,
+            // without any overhead on the processing code, report a specific location.
+            // We could even trigger special code paths to assess what happened carefully,
+            // all without any added cost.
+            if (depth >= pj.depthcapacity)
+            {
+                pj.errorcode = JsonParseError.DEPTH_ERROR;
+                return pj.errorcode;
+            }
+
+            switch (c)
+            {
+                case (uint8_t) '"':
+                    pj.errorcode = JsonParseError.STRING_ERROR;
+                    return pj.errorcode;
+                case (uint8_t) '0':
+                case (uint8_t) '1':
+                case (uint8_t) '2':
+                case (uint8_t) '3':
+                case (uint8_t) '4':
+                case (uint8_t) '5':
+                case (uint8_t) '6':
+                case (uint8_t) '7':
+                case (uint8_t) '8':
+                case (uint8_t) '9':
+                case (uint8_t) '-':
+                    pj.errorcode = JsonParseError.NUMBER_ERROR;
+                    return pj.errorcode;
+                case (uint8_t) 't':
+                    pj.errorcode = JsonParseError.T_ATOM_ERROR;
+                    return pj.errorcode;
+                case (uint8_t) 'n':
+                    pj.errorcode = JsonParseError.N_ATOM_ERROR;
+                    return pj.errorcode;
+                case (uint8_t) 'f':
+                    pj.errorcode = JsonParseError.F_ATOM_ERROR;
+                    return pj.errorcode;
+                default:
+                    break;
+            }
+
+            pj.errorcode = JsonParseError.TAPE_ERROR;
+            return pj.errorcode;
         }
     }
 }

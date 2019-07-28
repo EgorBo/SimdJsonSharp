@@ -37,6 +37,7 @@ namespace SimdJsonSharp
         public uint8_t* string_buf; // should be at least bytecapacity
         public uint8_t* current_string_buf_loc;
         public bool isvalid;
+        public JsonParseError errorcode;
 
         public ParsedJson()
         {

@@ -10,14 +10,14 @@ using static SimdJsonSharp.Utils;
 
 #region stdint types and friends
 using size_t = System.UInt64;
-using unsigned_bytechar = System.Byte;
+using char1 = System.Byte;
 using uint8_t = System.Byte;
 using uint32_t = System.UInt32;
 #endregion
 
 namespace SimdJsonSharp
 {
-    internal static unsafe partial class stringparsing
+    internal static unsafe class stringparsing
     {
         // begin copypasta
         // These chars yield themselves: " \ /
@@ -112,8 +112,7 @@ namespace SimdJsonSharp
                 var quote_mask = Avx2.CompareEqual(v, Vector256.Create((uint8_t) '"'));
                 return new parse_string_helper
                 {
-                    bs_bits = (uint32_t) Avx2.MoveMask(Avx2.CompareEqual(v,
-                        Vector256.Create((uint8_t) '\\'))), // bs_bits
+                    bs_bits = (uint32_t) Avx2.MoveMask(Avx2.CompareEqual(v, Vector256.Create((uint8_t) '\\'))), // bs_bits
                     quote_bits = (uint32_t) Avx2.MoveMask(quote_mask) // quote_bits
                 };
             }
@@ -139,7 +138,7 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool parse_string(uint8_t* buf, size_t len, ParsedJson pj, uint32_t depth, uint32_t offset)
         {
-            pj.WriteTape((ulong) (pj.current_string_buf_loc - pj.string_buf), (unsigned_bytechar) '"');
+            pj.WriteTape((ulong) (pj.current_string_buf_loc - pj.string_buf), (char1) '"');
             uint8_t* src = &buf[offset + 1]; // we know that buf at offset is a "
             uint8_t* dst = pj.current_string_buf_loc + sizeof(uint32_t);
             uint8_t* start_of_string = dst;
@@ -149,7 +148,6 @@ namespace SimdJsonSharp
                 if (((helper.bs_bits - 1) & helper.quote_bits) != 0)
                 {
                     // we encountered quotes first. Move dst to point to quotes and exit
-
                     // find out where the quote is...
                     uint32_t quote_dist = (uint32_t) trailingzeroes(helper.quote_bits);
 

@@ -1,7 +1,10 @@
 ﻿// This file is a manual port of C code https://github.com/lemire/simdjson to C#
 // (c) Daniel Lemire and Geoff Langdale
 
+#if !SIMDJSON_DISABLE_SWAR_NUMBER_PARSING
 #define SWAR_NUMBER_PARSING
+#endif
+
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -10,14 +13,12 @@ using System.Runtime.Intrinsics.X86;
 
 #region stdint types and friends
 // if you change something here please change it in other files too
-using size_t = System.UInt64;
 using uint8_t = System.Byte;
 using uint64_t = System.UInt64;
 using uint32_t = System.UInt32;
 using int64_t = System.Int64;
-using bytechar = System.SByte;
-using unsigned_bytechar = System.Byte;
-using uintptr_t = System.UIntPtr;
+using char1 = System.SByte;
+using uchar1 = System.Byte;
 using static SimdJsonSharp.Utils;
 #endregion
 
@@ -98,7 +99,7 @@ namespace SimdJsonSharp
             1e304,  1e305,  1e306,  1e307,  1e308};
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool is_integer(bytechar c)
+        private static bool is_integer(char1 c)
         {
             return (uint8_t)(c - '0') <= 9;
             // this gets compiled to (uint8_t)(c - '0') <= 9 on all decent compilers
@@ -118,7 +119,7 @@ namespace SimdJsonSharp
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool is_not_structural_or_whitespace_or_exponent_or_decimal(unsigned_bytechar c)
+        public static bool is_not_structural_or_whitespace_or_exponent_or_decimal(uchar1 c)
         {
             // Bypass bounds check as c can never 
             // exceed the bounds of structural_or_whitespace_or_exponent_or_decimal_negated
@@ -131,7 +132,7 @@ namespace SimdJsonSharp
         // at a glance, it looks better than Mula's
         // http://0x80.pl/articles/swar-digits-validate.html
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool is_made_of_eight_digits_fast(bytechar* chars)
+        private static bool is_made_of_eight_digits_fast(char1* chars)
         {
             uint64_t val;
             memcpy(&val, chars, 8);
@@ -145,15 +146,15 @@ namespace SimdJsonSharp
         }
 
         // C#: static readonly is an alternative to `const _m128`
-        private static readonly Vector128<sbyte> mul_1_10 = Vector128.Create((bytechar) 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1);
+        private static readonly Vector128<sbyte> mul_1_10 = Vector128.Create((char1) 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1);
         private static readonly Vector128<short> mul_1_100 = Vector128.Create(100, 1, 100, 1, 100, 1, 100 /*C#reversed*/, 1);
         private static readonly Vector128<short> mul_1_10000 = Vector128.Create(10000, 1, 10000, 1, 10000, 1, 10000, 1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint32_t parse_eight_digits_unrolled(bytechar* chars)
+        private static uint32_t parse_eight_digits_unrolled(char1* chars)
         {
             // this actually computes *16* values so we are being wasteful.
-            Vector128<sbyte> ascii0 = Vector128.Create((bytechar) '0');
+            Vector128<sbyte> ascii0 = Vector128.Create((char1) '0');
             Vector128<sbyte> input = Sse2.Subtract(Sse2.LoadVector128(chars), ascii0);
             Vector128<short> t1 = Ssse3.MultiplyAddAdjacent(input.AsByte(), mul_1_10);
             Vector128<int> t2 = Sse2.MultiplyAddAdjacent(t1, mul_1_100);
@@ -162,18 +163,15 @@ namespace SimdJsonSharp
             return Sse2.ConvertToUInt32(t4.AsUInt32()); // only captures the sum of the first 8 digits, drop the rest
         }
 
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         //
         // This function computes base * 10 ^ (- negative_exponent ).
         // It is only even going to be used when negative_exponent is tiny.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static double subnormal_power10(double @base, int negative_exponent)
         {
             // this is probably not going to be fast
             return @base * 1e-308 * Math.Pow(10, negative_exponent + 308);
         }
-
-
 
         // called by parse_number when we know that the output is a float,
         // but where there might be some integer overflow. The trick here is to
@@ -187,7 +185,7 @@ namespace SimdJsonSharp
         //
         static bool parse_float(uint8_t* buf, ParsedJson pj, uint32_t offset, bool found_minus)
         {
-            bytechar* p = (bytechar*) (buf + offset);
+            char1* p = (char1*) (buf + offset);
             bool negative = false;
             if (found_minus)
             {
@@ -205,12 +203,12 @@ namespace SimdJsonSharp
             }
             else
             {
-                unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                uchar1 digit = (uchar1) (*p - (uchar1) '0');
                 i = digit;
                 p++;
                 while (is_integer(*p))
                 {
-                    digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    digit = (uchar1) (*p - (uchar1) '0');
                     i = 10 * i + digit;
                     ++p;
                 }
@@ -222,7 +220,7 @@ namespace SimdJsonSharp
                 int fractionalweight = 308;
                 if (is_integer(*p))
                 {
-                    unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    uchar1 digit = (uchar1) (*p - (uchar1) '0');
                     ++p;
 
                     fractionalweight--;
@@ -235,7 +233,7 @@ namespace SimdJsonSharp
 
                 while (is_integer(*p))
                 {
-                    unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    uchar1 digit = (uchar1) (*p - (uchar1) '0');
                     ++p;
                     fractionalweight--;
                     i = i + digit * (fractionalweight >= 0 ? power_of_ten[fractionalweight] : 0);
@@ -261,26 +259,26 @@ namespace SimdJsonSharp
                     return false;
                 }
 
-                unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                uchar1 digit = (uchar1) (*p - (uchar1) '0');
                 int64_t expnumber = digit; // exponential part
                 p++;
                 if (is_integer(*p))
                 {
-                    digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    digit = (uchar1) (*p - (uchar1) '0');
                     expnumber = 10 * expnumber + digit;
                     ++p;
                 }
 
                 if (is_integer(*p))
                 {
-                    digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    digit = (uchar1) (*p - (uchar1) '0');
                     expnumber = 10 * expnumber + digit;
                     ++p;
                 }
 
                 if (is_integer(*p))
                 {
-                    digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    digit = (uchar1) (*p - (uchar1) '0');
                     expnumber = 10 * expnumber + digit;
                     ++p;
                 }
@@ -338,7 +336,7 @@ namespace SimdJsonSharp
         //
         static bool parse_large_integer(uint8_t* buf, ParsedJson pj, uint32_t offset, bool found_minus)
         {
-            bytechar* p = (bytechar*) (buf + offset);
+            char1* p = (char1*) (buf + offset);
 
             bool negative = false;
             if (found_minus)
@@ -348,7 +346,7 @@ namespace SimdJsonSharp
             }
 
             uint64_t i;
-            if (*p == (unsigned_bytechar) '0')
+            if (*p == (uchar1) '0')
             {
                 // 0 cannot be followed by an integer
                 ++p;
@@ -356,14 +354,14 @@ namespace SimdJsonSharp
             }
             else
             {
-                unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                uchar1 digit = (uchar1) (*p - (uchar1) '0');
                 i = digit;
                 p++;
                 // the is_made_of_eight_digits_fast routine is unlikely to help here because
                 // we rarely see large integer parts like 123456789
                 while (is_integer(*p))
                 {
-                    digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    digit = (uchar1) (*p - (uchar1) '0');
                     if (mul_overflow(i, 10, &i))
                     {
                         return false; // overflow
@@ -394,13 +392,13 @@ namespace SimdJsonSharp
 
             int64_t signed_answer = negative ? -(int64_t) i : (int64_t) i;
             pj.WriteTapeInt64(signed_answer);
-            return is_structural_or_whitespace((unsigned_bytechar) (*p)) != 0;
+            return is_structural_or_whitespace((uchar1) (*p)) != 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool parse_number(uint8_t* buf, ParsedJson pj, uint32_t offset, bool found_minus)
         {
-            bytechar* p = (bytechar*) (buf + offset);
+            char1* p = (char1*) (buf + offset);
             bool negative = false;
             if (found_minus)
             {
@@ -413,9 +411,9 @@ namespace SimdJsonSharp
                 }
             }
 
-            bytechar* startdigits = p;
+            char1* startdigits = p;
             uint64_t i; // an unsigned int avoids signed overflows (which are bad)
-            if (*p == (bytechar)'0')
+            if (*p == (char1)'0')
             {
                 // 0 cannot be followed by an integer
                 ++p;
@@ -433,14 +431,14 @@ namespace SimdJsonSharp
                     return false;
                 }
 
-                unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar)'0');
+                uchar1 digit = (uchar1) (*p - (uchar1)'0');
                 i = digit;
                 p++;
                 // the is_made_of_eight_digits_fast routine is unlikely to help here because
                 // we rarely see large integer parts like 123456789
                 while (is_integer(*p))
                 {
-                    digit = (unsigned_bytechar) (*p - (unsigned_bytechar)'0');
+                    digit = (uchar1) (*p - (uchar1)'0');
                     // a multiplication by 10 is cheaper than an arbitrary integer multiplication
                     i = 10 * i + digit; // might overflow, we will handle the overflow later
                     ++p;
@@ -457,10 +455,10 @@ namespace SimdJsonSharp
                 // z that fits in 53 bits, then we will be able to convert back the
                 // the integer into a float in a lossless manner.
                 ++p;
-                bytechar* firstafterperiod = p;
+                char1* firstafterperiod = p;
                 if (is_integer(*p))
                 {
-                    unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar)'0');
+                    uchar1 digit = (uchar1) (*p - (uchar1)'0');
                     ++p;
                     i = i * 10 + digit; // might overflow + multiplication by 10 is likely cheaper than arbitrary mult.
                     // we will handle the overflow later
@@ -480,7 +478,7 @@ namespace SimdJsonSharp
 #endif
                 while (is_integer(*p))
                 {
-                    unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar)'0');
+                    uchar1 digit = (uchar1) (*p - (uchar1)'0');
                     ++p;
                     i = i * 10 + digit; // in rare cases, this will overflow, but that's ok because we have parse_highprecision_float later.
                 }
@@ -490,7 +488,7 @@ namespace SimdJsonSharp
 
             int digitcount = (int) (p - startdigits - 1); // used later to guard against overflows
             int64_t expnumber = 0; // exponential part
-            if (((bytechar)'e' == *p) || ((bytechar)'E' == *p))
+            if (((char1)'e' == *p) || ((char1)'E' == *p))
             {
                 is_float = true;
                 ++p;
@@ -510,19 +508,19 @@ namespace SimdJsonSharp
                     return false;
                 }
 
-                unsigned_bytechar digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                uchar1 digit = (uchar1) (*p - (uchar1) '0');
                 expnumber = digit;
                 p++;
                 if (is_integer(*p))
                 {
-                    digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    digit = (uchar1) (*p - (uchar1) '0');
                     expnumber = 10 * expnumber + digit;
                     ++p;
                 }
 
                 if (is_integer(*p))
                 {
-                    digit = (unsigned_bytechar) (*p - (unsigned_bytechar) '0');
+                    digit = (uchar1) (*p - (uchar1) '0');
                     expnumber = 10 * expnumber + digit;
                     ++p;
                 }
@@ -544,8 +542,8 @@ namespace SimdJsonSharp
                     // this is uncommon
                     // It is possible that the integer had an overflow. 
                     // We have to handle the case where we have 0.0000somenumber.
-                    bytechar* start = startdigits;
-                    while ((*start == (bytechar)'0') || (*start == (bytechar)'.'))
+                    char1* start = startdigits;
+                    while ((*start == (char1)'0') || (*start == (char1)'.'))
                     {
                         start++;
                     }

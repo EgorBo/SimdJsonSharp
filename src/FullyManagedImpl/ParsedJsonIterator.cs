@@ -9,15 +9,24 @@ using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Text.Json;
 
-#region stdint types and friends
-// if you change something here please change it in other files too
-using size_t = System.UInt64;
-using uint8_t = System.Byte;
-using uint64_t = System.UInt64;
-using int64_t = System.Int64;
-using bytechar = System.SByte;
 using static SimdJsonSharp.Utils;
+
+#region stdint types and friends
+using size_t = System.UInt64;
+using bytechar = System.SByte;
+using char1 = System.Byte;
+using intptr_t = System.IntPtr;
+using uintptr_t = System.UIntPtr;
+using int8_t = System.SByte;
+using int16_t = System.Int16;
+using int32_t = System.Int32;
+using int64_t = System.Int64;
+using uint8_t = System.Byte;
+using uint16_t = System.UInt16;
+using uint32_t = System.UInt32;
+using uint64_t = System.UInt64;
 #endregion
+
 
 namespace SimdJsonSharp
 {
@@ -187,17 +196,15 @@ namespace SimdJsonSharp
         // return value is valid UTF-8
         public bytechar* GetUtf8String()
         {
-            return (bytechar*)(pj.string_buf + (current_val & (JSONVALUEMASK >> 24))); // for >> 24 see comments in GetUtf8StringLength()
+            return (bytechar*)(pj.string_buf + (current_val & JSONVALUEMASK) + sizeof(uint32_t));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetUtf8StringLength()
+        public uint32_t GetUtf8StringLength()
         {
-            // C#:
-            // current_val is:
-            // [toke_type][string_length][string_buffer_offset]
-            // where token_type will be always 0x2200_0000_0000_0000 (")
-            return (int)((current_val >> 32) - 0x22000000);
+            uint32_t answer;
+            memcpy(&answer, (bytechar*)(pj.string_buf + (current_val & JSONVALUEMASK)), sizeof(uint32_t));
+            return answer;
         }
 
         internal static readonly UTF8Encoding s_utf8Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
@@ -205,7 +212,7 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetUtf16String()
         {
-            return s_utf8Encoding.GetString((byte*)GetUtf8String(), GetUtf8StringLength());
+            return s_utf8Encoding.GetString((byte*)GetUtf8String(), (int)GetUtf8StringLength());
         }
 
         // throughout return true if we can do the navigation, false

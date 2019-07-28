@@ -14,7 +14,7 @@ using uint64_t = System.UInt64;
 using uint32_t = System.UInt32;
 using int64_t = System.Int64;
 using bytechar = System.SByte;
-using unsigned_bytechar = System.Byte;
+using char1 = System.Byte;
 using uintptr_t = System.UIntPtr;
 using static SimdJsonSharp.Utils;
 #endregion

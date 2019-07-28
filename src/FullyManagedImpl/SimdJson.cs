@@ -94,7 +94,7 @@ namespace SimdJsonSharp
         internal static JsonParseError JsonParse(uint8_t* jsonData, size_t length, ParsedJson pj, bool reallocIfNeeded = true)
         {
             if (pj.bytecapacity < length)
-                return JsonParseError.Capacity;
+                return JsonParseError.CAPACITY;
 
             bool reallocated = false;
             if (reallocIfNeeded)
@@ -104,13 +104,13 @@ namespace SimdJsonSharp
                 {
                     uint8_t* tmpbuf = jsonData;
                     jsonData = (uint8_t*)allocate_padded_buffer(length);
-                    if (jsonData == null) return JsonParseError.Memalloc;
+                    if (jsonData == null) return JsonParseError.MEMALLOC;
                     memcpy(jsonData, tmpbuf, length);
                     reallocated = true;
                 }
             }
 
-            var result = JsonParseError.Success;
+            var result = JsonParseError.SUCCESS;
             if (stage1_find_marks.find_structural_bits(jsonData, length, pj))
                 result = stage2_build_tape.unified_machine(jsonData, length, pj);
             if (reallocated)
@@ -121,9 +121,21 @@ namespace SimdJsonSharp
 
     public enum JsonParseError
     {
-        Success,
-        Capacity,
-        Memalloc,
-        TapeError
+        SUCCESS = 0,
+        CAPACITY, // This ParsedJson can't support a document that big
+        MEMALLOC, // Error allocating memory, most likely out of memory
+        TAPE_ERROR, // Something went wrong while writing to the tape (stage 2), this is a generic error
+        DEPTH_ERROR, // Your document exceeds the user-specified depth limitation
+        STRING_ERROR, // Problem while parsing a string
+        T_ATOM_ERROR, // Problem while parsing an atom starting with the letter 't'
+        F_ATOM_ERROR, // Problem while parsing an atom starting with the letter 'f'
+        N_ATOM_ERROR, // Problem while parsing an atom starting with the letter 'n'
+        NUMBER_ERROR, // Problem while parsing a number
+        UTF8_ERROR, // the input is not valid UTF-8
+        UNITIALIZED, // unknown error, or uninitialized document
+        EMPTY, // no structural document found
+        UNESCAPED_CHARS, // found unescaped characters in a string.
+        UNCLOSED_STRING, // missing quote at the end
+        UNEXPECTED_ERROR // indicative of a bug in simdjson
     }
 }
