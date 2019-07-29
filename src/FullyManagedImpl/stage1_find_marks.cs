@@ -1,7 +1,6 @@
 ﻿// This file is a manual port of C code https://github.com/lemire/simdjson to C#
 // (c) Daniel Lemire and Geoff Langdale
 
-using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -14,9 +13,7 @@ using uint8_t = System.Byte;
 using uint64_t = System.UInt64;
 using uint32_t = System.UInt32;
 using int64_t = System.Int64;
-using bytechar = System.SByte;
-using unsigned_bytechar = System.Byte;
-using uintptr_t = System.UIntPtr;
+using char1 = System.SByte;
 using static SimdJsonSharp.Utils;
 #endregion
 
@@ -233,6 +230,19 @@ namespace SimdJsonSharp
             return quote_mask;
         }
 
+
+        internal static readonly Vector256<byte> structural_table_avx = Vector256.Create( // TODO: reverse order?
+            (uint8_t)44, 125, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 58, 123,
+            44, 125, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 58, 123);
+        internal static readonly Vector256<byte> white_table_avx = Vector256.Create( // TODO: reverse order?
+            (uint8_t)32, 100, 100, 100, 17, 100, 113, 2, 100, 9, 10, 112, 100, 13, 100, 100,
+            32, 100, 100, 100, 17, 100, 113, 2, 100, 9, 10, 112, 100, 13, 100, 100);
+
+        internal static readonly Vector128<byte> structural_table_sse = Vector128.Create(// TODO: reverse order?
+            (uint8_t)44, 125, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 58, 123);
+        internal static readonly Vector128<byte> white_table_sse = Vector128.Create( // TODO: reverse order?
+            (uint8_t)32, 100, 100, 100, 17, 100, 113, 2, 100, 9, 10, 112, 100, 13, 100, 100);
+
         // do a 'shufti' to detect structural JSON characters
         // they are { 0x7b } 0x7d : 0x3a [ 0x5b ] 0x5d , 0x2c
         // these go into the first 3 buckets of the comparison (1/2/4)
@@ -246,20 +256,14 @@ namespace SimdJsonSharp
         {
             if (Avx2.IsSupported)
             {
-                Vector256<byte> structural_table = Vector256.Create( // TODO: reverse order?
-                    (uint8_t)44, 125, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 58, 123,
-                    44, 125, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 58, 123);
-                Vector256<byte> white_table = Vector256.Create( // TODO: reverse order?
-                    (uint8_t)32, 100, 100, 100, 17, 100, 113, 2, 100, 9, 10, 112, 100, 13, 100, 100,
-                    32, 100, 100, 100, 17, 100, 113, 2, 100, 9, 10, 112, 100, 13, 100, 100);
 
                 Vector256<byte> struct_offset = Vector256.Create((uint8_t)0xd4);
                 Vector256<byte> struct_mask = Vector256.Create((uint8_t)32);
 
                 Vector256<byte> lo_white = Avx2.CompareEqual(@in.lo,
-                    Avx2.Shuffle(white_table, @in.lo));
+                    Avx2.Shuffle(white_table_avx, @in.lo));
                 Vector256<byte> hi_white = Avx2.CompareEqual(@in.hi,
-                    Avx2.Shuffle(white_table, @in.hi));
+                    Avx2.Shuffle(white_table_avx, @in.hi));
                 uint64_t ws_res_0 = (uint32_t)(Avx2.MoveMask(lo_white));
                 uint64_t ws_res_1 = (uint64_t)Avx2.MoveMask(hi_white);
                 whitespace = (ws_res_0 | (ws_res_1 << 32));
@@ -267,8 +271,8 @@ namespace SimdJsonSharp
                 Vector256<byte> hi_struct_r1 = Avx2.Add(struct_offset, @in.hi);
                 Vector256<byte> lo_struct_r2 = Avx2.Or(@in.lo, struct_mask);
                 Vector256<byte> hi_struct_r2 = Avx2.Or(@in.hi, struct_mask);
-                Vector256<byte> lo_struct_r3 = Avx2.Shuffle(structural_table, lo_struct_r1);
-                Vector256<byte> hi_struct_r3 = Avx2.Shuffle(structural_table, hi_struct_r1);
+                Vector256<byte> lo_struct_r3 = Avx2.Shuffle(structural_table_avx, lo_struct_r1);
+                Vector256<byte> hi_struct_r3 = Avx2.Shuffle(structural_table_avx, hi_struct_r1);
                 Vector256<byte> lo_struct = Avx2.CompareEqual(lo_struct_r2, lo_struct_r3);
                 Vector256<byte> hi_struct = Avx2.CompareEqual(hi_struct_r2, hi_struct_r3);
 
@@ -279,21 +283,17 @@ namespace SimdJsonSharp
             }
             else
             {
-                Vector128<byte> structural_table = Vector128.Create(// TODO: reverse order?
-                    (uint8_t)44, 125, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 58, 123);
-                Vector128<byte> white_table = Vector128.Create( // TODO: reverse order?
-                    (uint8_t)32, 100, 100, 100, 17, 100, 113, 2, 100, 9, 10, 112, 100, 13, 100, 100);
                 Vector128<byte> struct_offset = Vector128.Create((byte)0xd4);
                 Vector128<byte> struct_mask = Vector128.Create((byte)32);
 
                 Vector128<byte> white0 = Sse2.CompareEqual(@in.v0,
-                         Ssse3.Shuffle(white_table, @in.v0));
+                         Ssse3.Shuffle(white_table_sse, @in.v0));
                 Vector128<byte> white1 = Sse2.CompareEqual(@in.v1,
-                         Ssse3.Shuffle(white_table, @in.v1));
+                         Ssse3.Shuffle(white_table_sse, @in.v1));
                 Vector128<byte> white2 = Sse2.CompareEqual(@in.v2,
-                         Ssse3.Shuffle(white_table, @in.v2));
+                         Ssse3.Shuffle(white_table_sse, @in.v2));
                 Vector128<byte> white3 = Sse2.CompareEqual(@in.v3,
-                         Ssse3.Shuffle(white_table, @in.v3));
+                         Ssse3.Shuffle(white_table_sse, @in.v3));
                 uint64_t ws_res_0 = (uint64_t)Sse2.MoveMask(white0);
                 uint64_t ws_res_1 = (uint64_t)Sse2.MoveMask(white1);
                 uint64_t ws_res_2 = (uint64_t)Sse2.MoveMask(white2);
@@ -311,10 +311,10 @@ namespace SimdJsonSharp
                 Vector128<byte> struct3_r2 = Sse2.Or(@in.v2, struct_mask);
                 Vector128<byte> struct4_r2 = Sse2.Or(@in.v3, struct_mask);
 
-                Vector128<byte> struct1_r3 = Ssse3.Shuffle(structural_table, struct1_r1);
-                Vector128<byte> struct2_r3 = Ssse3.Shuffle(structural_table, struct2_r1);
-                Vector128<byte> struct3_r3 = Ssse3.Shuffle(structural_table, struct3_r1);
-                Vector128<byte> struct4_r3 = Ssse3.Shuffle(structural_table, struct4_r1);
+                Vector128<byte> struct1_r3 = Ssse3.Shuffle(structural_table_sse, struct1_r1);
+                Vector128<byte> struct2_r3 = Ssse3.Shuffle(structural_table_sse, struct2_r1);
+                Vector128<byte> struct3_r3 = Ssse3.Shuffle(structural_table_sse, struct3_r1);
+                Vector128<byte> struct4_r3 = Ssse3.Shuffle(structural_table_sse, struct4_r1);
 
                 Vector128<byte> struct1 = Sse2.CompareEqual(struct1_r2, struct1_r3);
                 Vector128<byte> struct2 = Sse2.CompareEqual(struct2_r2, struct2_r3);
@@ -441,8 +441,6 @@ namespace SimdJsonSharp
             return structurals;
         }
 
-
-
         internal static JsonParseError find_structural_bits(uint8_t* buf, size_t len, ParsedJson pj)
         {
             if (len > pj.bytecapacity)
@@ -526,7 +524,6 @@ namespace SimdJsonSharp
 #if SIMDJSON_UTF8VALIDATE
                 check_utf8<T>(in, state);
 #endif
-
                 // detect odd sequences of backslashes
                 uint64_t odd_ends = find_odd_backslash_sequences(
                     @in, ref prev_iter_ends_odd_backslash);
@@ -593,10 +590,8 @@ namespace SimdJsonSharp
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static JsonParseError find_structural_bits(bytechar* buf, size_t len, ParsedJson pj)
-        {
-            return find_structural_bits((uint8_t*)(buf), len, pj);
-        }
-}
+        internal static JsonParseError find_structural_bits(char1* buf, size_t len, ParsedJson pj) 
+            => find_structural_bits((uint8_t*)(buf), len, pj);
+    }
 }
 

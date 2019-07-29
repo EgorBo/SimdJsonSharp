@@ -102,7 +102,6 @@ namespace SimdJsonSharp
         private static bool is_integer(char1 c)
         {
             return (uint8_t)(c - '0') <= 9;
-            // this gets compiled to (uint8_t)(c - '0') <= 9 on all decent compilers
         }
 
         private static ReadOnlySpan<byte> structural_or_whitespace_or_exponent_or_decimal_negated => new byte[256] {

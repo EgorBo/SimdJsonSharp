@@ -25,6 +25,8 @@ namespace SimdJsonSharp
             return pj;
         }
 
+        public static ParsedJson ParseJson(byte* jsonData, int length) => ParseJson(jsonData, (ulong) length, true);
+
         public static string MinifyJson(string input)
         {
             if (string.IsNullOrEmpty(input))

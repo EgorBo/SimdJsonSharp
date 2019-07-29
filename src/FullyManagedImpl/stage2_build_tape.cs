@@ -80,9 +80,7 @@ namespace SimdJsonSharp
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static JsonParseError unified_machine(bytechar *buf, size_t len, ParsedJson pj)
-        {
-            return unified_machine((uint8_t*)(buf), len, pj);
-        }
+            => unified_machine((uint8_t*)(buf), len, pj);
 
         internal static JsonParseError unified_machine(uint8_t* buf, size_t len, ParsedJson pj)
         {

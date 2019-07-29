@@ -38,8 +38,8 @@ namespace SimdJsonSharp
 
         public ParsedJson()
         {
-            if (!Avx2.IsSupported)
-                throw new NotSupportedException("AVX2 is required form SimdJson");
+            if (!Sse42.IsSupported || IntPtr.Size == 4)
+                throw new NotSupportedException("SimdJson requires AVX2 or SSE42 and x64");
         }
 
         // if needed, allocate memory so that the object is able to process JSON
