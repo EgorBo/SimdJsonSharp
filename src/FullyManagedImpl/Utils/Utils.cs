@@ -26,6 +26,7 @@ namespace SimdJsonSharp
         public const int SIMDJSON_PADDING = 32; //sizeof(__m256i)
         public const ulong JSONVALUEMASK = 0xFFFFFFFFFFFFFF;
         public const ulong DEFAULTMAXDEPTH = 1024;  // a JSON document with a depth exceeding 1024 is probably de facto invalid
+        public const ulong SIMDJSON_MAXSIZE_BYTES = 0xFFFFFFFF;
 
         // structural chars here are
         // they are { 0x7b } 0x7d : 0x3a [ 0x5b ] 0x5d , 0x2c (and NULL)
@@ -386,7 +387,19 @@ namespace SimdJsonSharp
         {
             Unsafe.InitBlockUnaligned(dst, value, length);
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool memcmp(bytechar* dst, bytechar* src, uint length)
+        {
+            // TODO: use actuall memcpm
+            for (int i = 0; i < length; i++)
+            {
+                if (dst[i] != src[i])
+                    return false;
+            }
+            return true;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool add_overflow(ulong value1, ulong value2, ulong* result)
         {
@@ -426,7 +439,8 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void delete<T>(T* buf) where T : unmanaged
         {
-            Marshal.FreeHGlobal((IntPtr)buf);
+            if (buf != null)
+                Marshal.FreeHGlobal((IntPtr)buf);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

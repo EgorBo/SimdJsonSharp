@@ -2,10 +2,8 @@
 // (c) Daniel Lemire and Geoff Langdale
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Text.Json;
 
@@ -13,16 +11,9 @@ using static SimdJsonSharp.Utils;
 
 #region stdint types and friends
 using size_t = System.UInt64;
-using bytechar = System.SByte;
-using char1 = System.Byte;
-using intptr_t = System.IntPtr;
-using uintptr_t = System.UIntPtr;
-using int8_t = System.SByte;
-using int16_t = System.Int16;
-using int32_t = System.Int32;
+using char1 = System.SByte;
 using int64_t = System.Int64;
 using uint8_t = System.Byte;
-using uint16_t = System.UInt16;
 using uint32_t = System.UInt32;
 using uint64_t = System.UInt64;
 #endregion
@@ -32,13 +23,13 @@ namespace SimdJsonSharp
 {
     public unsafe struct ParsedJsonIterator : IDisposable
     {
-        private size_t depth;
-        private size_t location; // our current location on a tape
-        private size_t tape_length;
-        private uint8_t current_type;
-        private uint64_t current_val;
-        private scopeindex_t* depthindex;
-        private ParsedJson pj;
+        ParsedJson pj;
+        size_t depth;
+        size_t location;     // our current location on a tape
+        size_t tape_length;
+        uint8_t current_type;
+        uint64_t current_val;
+        scopeindex_t* depthindex;
 
         public ParsedJson ParsedJson => pj;
 
@@ -48,33 +39,24 @@ namespace SimdJsonSharp
             depth = 0;
             location = 0;
             tape_length = 0;
-            depthindex = null;
+            depthindex = allocate<scopeindex_t>(pj.depthcapacity);
             current_type = 0;
             current_val = 0;
 
-            if (pj.IsValid)
+            depthindex[0].start_of_scope = location;
+            current_val = pj.tape[location++];
+            current_type = (uint8_t)(current_val >> 56);
+            depthindex[0].scope_type = current_type;
+            if (current_type == 'r')
             {
-                depthindex = allocate<scopeindex_t>(pj.depthcapacity);
-                if (depthindex == null)
+                tape_length = current_val & JSONVALUEMASK;
+                if (location < tape_length)
                 {
-                    return;
-                }
-
-                depthindex[0].start_of_scope = location;
-                current_val = pj.tape[location++];
-                current_type = (uint8_t)(current_val >> 56);
-                depthindex[0].scope_type = current_type;
-                if (current_type == 'r')
-                {
-                    tape_length = current_val & JSONVALUEMASK;
-                    if (location < tape_length)
-                    {
-                        current_val = pj.tape[location];
-                        current_type = (uint8_t)(current_val >> 56);
-                        depth++;
-                        depthindex[depth].start_of_scope = location;
-                        depthindex[depth].scope_type = current_type;
-                    }
+                    current_val = pj.tape[location];
+                    current_type = (uint8_t)(current_val >> 56);
+                    depth++;
+                    depthindex[depth].start_of_scope = location;
+                    depthindex[depth].scope_type = current_type;
                 }
             }
             else
@@ -117,11 +99,6 @@ namespace SimdJsonSharp
             {
                 // Leaving a scope.
                 depth--;
-                if (depth == 0)
-                {
-                    // Should not be necessary
-                    return false;
-                }
             }
             else if ((current_type == 'd') || (current_type == 'l'))
             {
@@ -133,6 +110,70 @@ namespace SimdJsonSharp
             current_val = pj.tape[location];
             current_type = (uint8_t)(current_val >> 56);
             return true;
+        }
+
+        public void MoveToValue()
+        {
+            // assume that we are on a key, so move by 1.
+            location += 1;
+            current_val = pj.tape[location];
+            current_type = (uint8_t)(current_val >> 56);
+        }
+
+        public bool MoveToKey(char1* key) {
+            if(Down()) {
+                do {
+                    Debug.Assert(IsString);
+                    bool rightkey = (strcmp(GetUtf8String(), key) == 0);// null chars would fool this
+                    MoveToValue();
+                    if(rightkey) { 
+                        return true;
+                    }
+                } while(Next());
+                Debug.Assert(Up());// not found
+            }
+            return false;
+        }
+
+        public bool MoveToKey(char1* key, uint32_t length)
+        {
+            if (Down())
+            {
+                do
+                {
+                    Debug.Assert(IsString);
+                    bool rightkey = ((GetUtf8StringLength() == length) && (!memcmp(GetUtf8String(), key, length)));
+                    MoveToValue();
+                    if (rightkey)
+                    {
+                        return true;
+                    }
+                } while (Next());
+                Debug.Assert(Up());// not found
+            }
+            return false;
+        }
+
+        public bool MoveToIndex(uint32_t index)
+        {
+            Debug.Assert(IsArray);
+            if (Down())
+            {
+                uint32_t i = 0;
+                for (; i < index; i++)
+                {
+                    if (!Next())
+                    {
+                        break;
+                    }
+                }
+                if (i == index)
+                {
+                    return true;
+                }
+                Debug.Assert(Up());
+            }
+            return false;
         }
 
         public uint8_t CurrentType => current_type;
@@ -168,42 +209,21 @@ namespace SimdJsonSharp
 
         public bool IsDouble => current_type == 'd';
 
-        // when at {, go one level deep, looking for a given key
-        // if successful, we are left pointing at the value,
-        // if not, we are still pointing at the object ({)
-        // (in case of repeated keys, this only finds the first one)
-        public bool MoveToKey(bytechar* key)
-        {
-            if (Down())
-            {
-                do
-                {
-                    Debug.Assert(IsString);
-                    bool rightkey = (Utils.strcmp(GetUtf8String(), key) == 0);
-                    Next();
-                    if (rightkey) return true;
-                } while (Next());
-
-                Debug.Assert(Up()); // not found
-            }
-
-            return false;
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         // get the string value at this node (NULL ended); valid only if we're at "
         // note that tabs, and line endings are escaped in the returned value (see print_with_escapes)
         // return value is valid UTF-8
-        public bytechar* GetUtf8String()
+        public char1* GetUtf8String()
         {
-            return (bytechar*)(pj.string_buf + (current_val & JSONVALUEMASK) + sizeof(uint32_t));
+            return (char1*)(pj.string_buf + (current_val & JSONVALUEMASK) + sizeof(uint32_t));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint32_t GetUtf8StringLength()
         {
             uint32_t answer;
-            memcpy(&answer, (bytechar*)(pj.string_buf + (current_val & JSONVALUEMASK)), sizeof(uint32_t));
+            memcpy(&answer, (char1*)(pj.string_buf + (current_val & JSONVALUEMASK)), sizeof(uint32_t));
             return answer;
         }
 
@@ -225,43 +245,26 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Next()
         {
-            if ((current_type == '[') || (current_type == '{'))
+            size_t npos;
+            if ((current_type == (uint8_t)'[') || (current_type == (uint8_t)'{'))
             {
                 // we need to jump
-                size_t npos = (current_val & JSONVALUEMASK);
-                if (npos >= tape_length)
-                {
-                    return false; // shoud never happen unless at the root
-                }
-
-                uint64_t nextval = pj.tape[npos];
-                uint8_t nexttype = (uint8_t)(nextval >> 56);
-                if ((nexttype == ']') || (nexttype == '}'))
-                {
-                    return false; // we reached the end of the scope
-                }
-
-                location = npos;
-                current_val = nextval;
-                current_type = nexttype;
-                return true;
+                npos = (current_val & JSONVALUEMASK);
             }
             else
             {
-                size_t increment = (size_t)((current_type == 'd' || current_type == 'l') ? 2 : 1);
-                if (location + increment >= tape_length) return false;
-                uint64_t nextval = pj.tape[location + increment];
-                uint8_t nexttype = (uint8_t)(nextval >> 56);
-                if ((nexttype == ']') || (nexttype == '}'))
-                {
-                    return false; // we reached the end of the scope
-                }
-
-                location = location + increment;
-                current_val = nextval;
-                current_type = nexttype;
-                return true;
+                npos = (size_t)(location + (size_t)((current_type == (uint8_t)'d' || current_type == (uint8_t)'l') ? 2 : 1));
             }
+            uint64_t nextval = pj.tape[npos];
+            uint8_t nexttype = (uint8_t)(nextval >> 56);
+            if ((nexttype == (uint8_t)']') || (nexttype == (uint8_t)'}'))
+            {
+                return false; // we reached the end of the scope
+            }
+            location = npos;
+            current_val = nextval;
+            current_type = nexttype;
+            return true;
         }
 
         // Withing a given scope (series of nodes at the same depth within either an
@@ -272,7 +275,10 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Prev()
         {
-            if (location - 1 < depthindex[depth].start_of_scope) return false;
+            if (location - 1 < depthindex[depth].start_of_scope)
+            {
+                return false;
+            }
             location -= 1;
             current_val = pj.tape[location];
             current_type = (uint8_t)(current_val >> 56);
@@ -284,12 +290,10 @@ namespace SimdJsonSharp
                 {
                     return false; // shoud never happen
                 }
-
                 location = new_location;
                 current_val = pj.tape[location];
                 current_type = (uint8_t)(current_val >> 56);
             }
-
             return true;
         }
 
@@ -304,7 +308,6 @@ namespace SimdJsonSharp
             {
                 return false; // don't allow moving back to root
             }
-
             ToStartScope();
             // next we just move to the previous value
             depth--;
@@ -321,7 +324,10 @@ namespace SimdJsonSharp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Down()
         {
-            if (location + 1 >= tape_length) return false;
+            if (location + 1 >= tape_length)
+            {
+                return false;
+            }
             if ((current_type == '[') || (current_type == '{'))
             {
                 size_t npos = (current_val & JSONVALUEMASK);
@@ -329,7 +335,6 @@ namespace SimdJsonSharp
                 {
                     return false; // we have an empty scope
                 }
-
                 depth++;
                 location = location + 1;
                 depthindex[depth].start_of_scope = location;
@@ -338,7 +343,6 @@ namespace SimdJsonSharp
                 current_type = (uint8_t)(current_val >> 56);
                 return true;
             }
-
             return false;
         }
 
@@ -351,21 +355,16 @@ namespace SimdJsonSharp
             current_type = (uint8_t)(current_val >> 56);
         }
 
-        public void Dispose()
+        public void Dispose() => Dispose(true);
+
+        private void Dispose(bool disposing)
         {
-            if (depthindex != null)
-            {
-                delete(depthindex);
-                depthindex = null;
-            }
+            if (disposing)
+                GC.SuppressFinalize(this);
 
-            if (pj != null)
-            {
-                pj.Dispose();
-                pj = null;
-            }
+            delete(depthindex);
+            depthindex = null;
         }
-
 
         /// <summary>
         /// Convert byte get_type() int System.Text.Json.JsonTokenType

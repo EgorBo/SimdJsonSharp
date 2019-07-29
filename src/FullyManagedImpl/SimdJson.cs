@@ -3,41 +3,26 @@
 
 using System;
 using System.Buffers;
-using System.Runtime.InteropServices;
 using System.Text;
 
-#region stdint types and friends
-// if you change something here please change it in other files too
-using size_t = System.UInt64;
-using uint8_t = System.Byte;
-using uint64_t = System.UInt64;
-using uint32_t = System.UInt32;
-using int64_t = System.Int64;
-using bytechar = System.SByte;
-using unsigned_bytechar = System.Byte;
-using uintptr_t = System.UIntPtr;
 using static SimdJsonSharp.Utils;
-#endregion
 
 namespace SimdJsonSharp
 {
     public static unsafe class SimdJson
     {
-        public static ParsedJson ParseJson(byte* jsonData, int length, bool reallocIfNeeded = true)
+        public static ParsedJson ParseJson(byte* jsonData, ulong length, bool reallocIfNeeded = true)
         {
             var pj = new ParsedJson();
-            bool ok = pj.AllocateCapacity((ulong)length);
+            bool ok = pj.AllocateCapacity(length);
             if (ok)
-                JsonParse(jsonData, (ulong)length, pj, reallocIfNeeded);
+                JsonParse(jsonData, length, pj, reallocIfNeeded);
             else
-                throw new InvalidOperationException("failure during memory allocation");
+            {
+                pj.isvalid = false;
+                pj.ErrorCode = JsonParseError.CAPACITY;
+            }
             return pj;
-        }
-
-        public static ParsedJsonIterator ParseJsonAndOpenIterator(byte* jsonData, int length)
-        {
-            var parsedJson = ParseJson(jsonData, length);
-            return new ParsedJsonIterator(parsedJson);
         }
 
         public static string MinifyJson(string input)
@@ -91,7 +76,7 @@ namespace SimdJsonSharp
 
         private static readonly long pagesize = Environment.SystemPageSize;
 
-        internal static JsonParseError JsonParse(uint8_t* jsonData, size_t length, ParsedJson pj, bool reallocIfNeeded = true)
+        internal static JsonParseError JsonParse(byte* jsonData, UInt64 length, ParsedJson pj, bool reallocIfNeeded = true)
         {
             if (pj.bytecapacity < length)
                 return JsonParseError.CAPACITY;
@@ -99,23 +84,23 @@ namespace SimdJsonSharp
             bool reallocated = false;
             if (reallocIfNeeded)
             {
-                // realloc is needed if the end of the memory crosses a page
-                if ((size_t)(jsonData + length - 1) % (size_t)pagesize < SIMDJSON_PADDING)
-                {
-                    uint8_t* tmpbuf = jsonData;
-                    jsonData = (uint8_t*)allocate_padded_buffer(length);
-                    if (jsonData == null) return JsonParseError.MEMALLOC;
-                    memcpy(jsonData, tmpbuf, length);
-                    reallocated = true;
-                }
+                byte* tmpbuf = jsonData;
+                jsonData = (byte*)allocate_padded_buffer(length);
+                if (jsonData == null) return JsonParseError.MEMALLOC;
+                memcpy((void*)jsonData, tmpbuf, length);
+                reallocated = true;
             }
 
-            var result = JsonParseError.SUCCESS;
-            if (stage1_find_marks.find_structural_bits(jsonData, length, pj))
-                result = stage2_build_tape.unified_machine(jsonData, length, pj);
-            if (reallocated)
-                aligned_free(jsonData);
-            return result;
+            JsonParseError stage1_is_ok = stage1_find_marks.find_structural_bits(jsonData, length, pj);
+            if (stage1_is_ok != JsonParseError.SUCCESS)
+            {
+                pj.ErrorCode = stage1_is_ok;
+                return pj.ErrorCode;
+            }
+            JsonParseError res = stage2_build_tape.unified_machine(jsonData, length, pj);
+            if (reallocated) { aligned_free((void*)jsonData); }
+            return res;
+
         }
     }
 

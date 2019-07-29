@@ -9,23 +9,24 @@ namespace ConsoleApp124
     {
         static unsafe void Main(string[] args)
         {
-
             string helloWorldJson = @"{ ""answer"": 42, ""name"": ""Egor"" }";
             ReadOnlySpan<byte> bytes = Encoding.UTF8.GetBytes(helloWorldJson);
-
-            //bytes = File.ReadAllBytes(@"C:\prj\simdjson\jsonexamples\numbers.json");
-
-            // SimdJson is UTF8 only
 
             fixed (byte* ptr = bytes)
             {
                 // SimdJsonN -- N stands for Native, it means we are using Bindings for simdjson native lib
                 // SimdJson -- fully managed .NET Core 3.0 port
-                using (ParsedJson doc = SimdJson.ParseJson(ptr, bytes.Length))
+                using (ParsedJson doc = SimdJson.ParseJson(ptr, (ulong)bytes.Length))
                 {
-                    Console.WriteLine($"Is json valid:{doc.IsValid}\n");
+                    if (!doc.IsValid)
+                    {
+                        Console.WriteLine("Error: " + doc.ErrorCode);
+                        return;
+                    }
 
-                    // open iterator:
+                    Console.WriteLine("Json is valid!");
+
+                    //open iterator:
                     using (var iterator = new ParsedJsonIterator(doc))
                     {
                         while (iterator.MoveForward())
@@ -34,11 +35,11 @@ namespace ConsoleApp124
                                 Console.WriteLine("integer: " + iterator.GetInteger());
                             if (iterator.IsString)
                                 Console.WriteLine("string: " + iterator.GetUtf16String());
-                            if (iterator.IsDouble)
-                                Console.WriteLine("double: " + iterator.GetDouble());
                         }
                     }
                 }
+
+                Console.WriteLine("Done");
             }
         }
     }

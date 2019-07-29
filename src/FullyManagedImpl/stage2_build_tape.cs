@@ -97,8 +97,8 @@ namespace SimdJsonSharp
             pj.Init(); // sets isvalid to false
             if (pj.bytecapacity < len)
             {
-                pj.errorcode = JsonParseError.CAPACITY;
-                return pj.errorcode;
+                pj.ErrorCode = JsonParseError.CAPACITY;
+                return pj.ErrorCode;
             }
 
             ////////////////////////////// START STATE /////////////////////////////
@@ -610,8 +610,8 @@ namespace SimdJsonSharp
             pj.WriteTape(pj.containing_scope_offset[depth], (uint8_t) 'r'); // r is root
 
             pj.isvalid = true;
-            pj.errorcode = JsonParseError.SUCCESS;
-            return pj.errorcode;
+            pj.ErrorCode = JsonParseError.SUCCESS;
+            return pj.ErrorCode;
             fail:
             // we do not need the next line because this is done by pj.init(), pessimistically.
             // pj.isvalid  = false;
@@ -622,15 +622,15 @@ namespace SimdJsonSharp
             // all without any added cost.
             if (depth >= pj.depthcapacity)
             {
-                pj.errorcode = JsonParseError.DEPTH_ERROR;
-                return pj.errorcode;
+                pj.ErrorCode = JsonParseError.DEPTH_ERROR;
+                return pj.ErrorCode;
             }
 
             switch (c)
             {
                 case (uint8_t) '"':
-                    pj.errorcode = JsonParseError.STRING_ERROR;
-                    return pj.errorcode;
+                    pj.ErrorCode = JsonParseError.STRING_ERROR;
+                    return pj.ErrorCode;
                 case (uint8_t) '0':
                 case (uint8_t) '1':
                 case (uint8_t) '2':
@@ -642,23 +642,23 @@ namespace SimdJsonSharp
                 case (uint8_t) '8':
                 case (uint8_t) '9':
                 case (uint8_t) '-':
-                    pj.errorcode = JsonParseError.NUMBER_ERROR;
-                    return pj.errorcode;
+                    pj.ErrorCode = JsonParseError.NUMBER_ERROR;
+                    return pj.ErrorCode;
                 case (uint8_t) 't':
-                    pj.errorcode = JsonParseError.T_ATOM_ERROR;
-                    return pj.errorcode;
+                    pj.ErrorCode = JsonParseError.T_ATOM_ERROR;
+                    return pj.ErrorCode;
                 case (uint8_t) 'n':
-                    pj.errorcode = JsonParseError.N_ATOM_ERROR;
-                    return pj.errorcode;
+                    pj.ErrorCode = JsonParseError.N_ATOM_ERROR;
+                    return pj.ErrorCode;
                 case (uint8_t) 'f':
-                    pj.errorcode = JsonParseError.F_ATOM_ERROR;
-                    return pj.errorcode;
+                    pj.ErrorCode = JsonParseError.F_ATOM_ERROR;
+                    return pj.ErrorCode;
                 default:
                     break;
             }
 
-            pj.errorcode = JsonParseError.TAPE_ERROR;
-            return pj.errorcode;
+            pj.ErrorCode = JsonParseError.TAPE_ERROR;
+            return pj.ErrorCode;
         }
     }
 }
