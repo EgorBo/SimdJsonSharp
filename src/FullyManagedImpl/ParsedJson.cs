@@ -2,21 +2,16 @@
 // (c) Daniel Lemire and Geoff Langdale
 
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 
 #region stdint types and friends
-// if you change something here please change it in other files too
 using size_t = System.UInt64;
 using uint8_t = System.Byte;
 using uint64_t = System.UInt64;
 using uint32_t = System.UInt32;
 using int64_t = System.Int64;
-using bytechar = System.SByte;
-using unsigned_bytechar = System.Byte;
-using uintptr_t = System.UIntPtr;
+using char1 = System.SByte;
 using static SimdJsonSharp.Utils;
 #endregion
 
@@ -24,24 +19,27 @@ namespace SimdJsonSharp
 {
     public unsafe class ParsedJson : IDisposable
     {
-        public size_t bytecapacity; // indicates how many bits are meant to be supported 
-        public size_t depthcapacity; // how deep we can go
-        public size_t tapecapacity;
-        public size_t stringcapacity;
-        public uint32_t current_loc;
-        public uint32_t n_structural_indexes;
-        public uint32_t* structural_indexes;
-        public uint64_t* tape;
-        public uint32_t* containing_scope_offset;
-        public bytechar* ret_address;
-        public uint8_t* string_buf; // should be at least bytecapacity
-        public uint8_t* current_string_buf_loc;
-        public bool isvalid;
+        internal size_t bytecapacity; // indicates how many bits are meant to be supported 
+        internal size_t depthcapacity; // how deep we can go
+        internal size_t tapecapacity;
+        internal size_t stringcapacity;
+        internal uint32_t current_loc;
+        internal uint32_t n_structural_indexes;
+        internal uint32_t* structural_indexes;
+        internal uint64_t* tape;
+        internal uint32_t* containing_scope_offset;
+        internal char1* ret_address;
+        internal uint8_t* string_buf; // should be at least bytecapacity
+        internal uint8_t* current_string_buf_loc;
+        internal bool isvalid;
+        internal bool isDisposed;
+
+        public JsonParseError ErrorCode { get; internal set; }
 
         public ParsedJson()
         {
-            if (!Avx2.IsSupported)
-                throw new NotSupportedException("AVX2 is required form SimdJson");
+            if (!Sse42.IsSupported || IntPtr.Size == 4)
+                throw new NotSupportedException("SimdJson requires AVX2 or SSE42 and x64");
         }
 
         // if needed, allocate memory so that the object is able to process JSON
@@ -50,32 +48,48 @@ namespace SimdJsonSharp
         {
             if ((maxdepth == 0) || (len == 0))
             {
-                Debug.WriteLine("capacities must be non-zero ");
                 return false;
             }
-
+            if (len > SIMDJSON_MAXSIZE_BYTES)
+            {
+                return false;
+            }
             if ((len <= bytecapacity) && (depthcapacity < maxdepth))
+            {
                 return true;
+            }
             Deallocate();
-
             isvalid = false;
             bytecapacity = 0; // will only set it to len after allocations are a success
             n_structural_indexes = 0;
-            uint32_t max_structures = (uint32_t) ROUNDUP_N(len, 64) + 2 + 7;
-            structural_indexes = Utils.allocate<uint32_t>(max_structures);
-            size_t localtapecapacity = ROUNDUP_N(len, 64);
-            size_t localstringcapacity = ROUNDUP_N(len, 64);
-            string_buf = Utils.allocate<uint8_t>(localstringcapacity);
-            tape = Utils.allocate<uint64_t>(localtapecapacity);
-            containing_scope_offset = Utils.allocate<uint32_t>(maxdepth);
-            ret_address = Utils.allocate<bytechar>(maxdepth);
+            uint32_t max_structures = (uint32_t)(ROUNDUP_N(len, 64) + 2 + 7);
+            structural_indexes = allocate<uint32_t>(max_structures);
+            // a pathological input like "[[[[..." would generate len tape elements, so need a capacity of len + 1
+            size_t localtapecapacity = ROUNDUP_N(len + 1, 64);
+            // a document with only zero-length strings... could have len/3 string
+            // and we would need len/3 * 5 bytes on the string buffer 
+            size_t localstringcapacity = ROUNDUP_N(5 * len / 3 + 32, 64);
+            string_buf = allocate <uint8_t>(localstringcapacity);
+            tape = allocate <uint64_t>(localtapecapacity);
+            containing_scope_offset = allocate <uint32_t>(maxdepth);
+            ret_address = allocate<char1>(maxdepth);
             if ((string_buf == null) || (tape == null) ||
                 (containing_scope_offset == null) || (ret_address == null) || (structural_indexes == null))
             {
-                Deallocate();
+                delete(ret_address);
+                delete(containing_scope_offset);
+                delete(tape);
+                delete(string_buf);
+                delete(structural_indexes);
                 return false;
             }
-
+            /*
+            // We do not need to initialize this content for parsing, though we could
+            // need to initialize it for safety.
+            memset(string_buf, 0 , localstringcapacity); 
+            memset(structural_indexes, 0, max_structures * sizeof(uint32_t)); 
+            memset(tape, 0, localtapecapacity * sizeof(uint64_t)); 
+            */
             bytecapacity = len;
             depthcapacity = maxdepth;
             tapecapacity = localtapecapacity;
@@ -85,48 +99,35 @@ namespace SimdJsonSharp
 
         private void Deallocate()
         {
-            isvalid = false;
             bytecapacity = 0;
             depthcapacity = 0;
             tapecapacity = 0;
             stringcapacity = 0;
+            delete(ret_address);
+            delete(containing_scope_offset);
+            delete(tape);
+            delete(string_buf);
+            delete(structural_indexes);
+            isvalid = false;
+        }
 
-            if (ret_address != null)
-            {
-                delete(ret_address);
-                ret_address = null;
-            }
+        public void Dispose() => Dispose(true);
 
-            if (containing_scope_offset != null)
-            {
-                delete(containing_scope_offset);
-                containing_scope_offset = null;
-            }
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+                GC.SuppressFinalize(this);
 
-            if (tape != null)
+            if (!isDisposed)
             {
-                delete(tape);
-                tape = null;
-            }
-
-            if (string_buf != null)
-            {
-                delete(string_buf);
-                string_buf = null;
-            }
-
-            if (structural_indexes != null)
-            {
-                delete(structural_indexes);
-                structural_indexes = null;
+                isDisposed = true;
+                Deallocate();
             }
         }
 
-        public void Dispose() => Deallocate();
-
         ~ParsedJson()
         {
-            Dispose();
+            Dispose(false);
         }
 
         public bool IsValid => isvalid;

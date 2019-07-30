@@ -15,7 +15,7 @@ namespace SimdJsonSharp.Tests
         public ValidateTestFilesTests()
         {
             string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            testDataDir = Path.Combine(currentDir, @"../../../../jsonexamples");
+            testDataDir = Path.Combine(currentDir, @"C:\prj\simdjson\jsonexamples");
         }
 
         [Fact]
@@ -28,7 +28,7 @@ namespace SimdJsonSharp.Tests
             {
                 byte[] fileData = File.ReadAllBytes(file);
                 fixed (byte* ptr = fileData)
-                    using (ParsedJson doc = SimdJson.ParseJson(ptr, fileData.Length))
+                    using (ParsedJson doc = SimdJson.ParseJson(ptr, (ulong)fileData.Length))
                         Assert.True(doc.IsValid);
             }
         }
@@ -56,7 +56,7 @@ namespace SimdJsonSharp.Tests
 
             fixed (byte* ptr = bytes)
             {
-                using (ParsedJson doc = SimdJson.ParseJson(ptr, bytes.Length))
+                using (ParsedJson doc = SimdJson.ParseJson(ptr, (ulong)bytes.Length))
                 {
                     Assert.False(doc.IsValid);
                     Assert.Throws<InvalidOperationException>(() => doc.CreateIterator());
@@ -64,7 +64,7 @@ namespace SimdJsonSharp.Tests
             }
         }
 
-        //[Fact]
+        [Fact]
         public unsafe void ParseDoubles()
         {
             byte[] fileData = File.ReadAllBytes(Path.Combine(testDataDir, "canada.json"));
@@ -73,7 +73,7 @@ namespace SimdJsonSharp.Tests
 
             fixed (byte* ptr = fileData)
             {
-                using (ParsedJson doc = SimdJson.ParseJson(ptr, fileData.Length))
+                using (ParsedJson doc = SimdJson.ParseJson(ptr, (ulong)fileData.Length))
                 {
                     using (var iterator = doc.CreateIterator())
                     {
@@ -89,7 +89,6 @@ namespace SimdJsonSharp.Tests
             }
 
             // compare with doubles from Utf8JsonReader
-
             Utf8JsonReader reader = new Utf8JsonReader(fileData, true, default);
             while (reader.Read())
             {
