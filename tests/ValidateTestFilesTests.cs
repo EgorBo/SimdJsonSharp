@@ -15,7 +15,7 @@ namespace SimdJsonSharp.Tests
         public ValidateTestFilesTests()
         {
             string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            testDataDir = Path.Combine(currentDir, @"C:\prj\simdjson\jsonexamples");
+            testDataDir = Path.Join(Directory.GetParent(currentDir).Parent.Parent.Parent.FullName, "jsonexamples");
         }
 
         [Fact]

@@ -8,6 +8,14 @@ namespace SimdJsonSharp.Tests
 {
     public class MinifierTests
     {
+        private string testDataDir;
+
+        public MinifierTests()
+        {
+            string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            testDataDir = Path.Join(Directory.GetParent(currentDir).Parent.Parent.Parent.FullName, "jsonexamples");
+        }
+
         //[Fact]
         public void ValidateMinifier()
         {
@@ -24,9 +32,6 @@ namespace SimdJsonSharp.Tests
         [Fact]
         public unsafe void ValidateMinimizedJson()
         {
-            string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string testDataDir = Path.Combine(currentDir, @"../../../../jsonexamples");
-
             string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories);
             // 20 files, ~15Mb of JSON
             Assert.NotEmpty(files);
@@ -46,9 +51,6 @@ namespace SimdJsonSharp.Tests
         [Fact]
         public unsafe void ValidateMinimizedJsonN()
         {
-            string currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string testDataDir = Path.Combine(currentDir, @"../../../../jsonexamples");
-
             string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories);
             // 20 files, ~15Mb of JSON
             Assert.NotEmpty(files);

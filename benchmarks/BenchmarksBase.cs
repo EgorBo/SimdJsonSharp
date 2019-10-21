@@ -26,7 +26,8 @@ namespace Benchmarks
 
         public IEnumerable<object[]> TestData()
         {
-            var testDataDir = @"C:\prj\simdjsonsharp\jsonexamples"; // TODO: fix absolute path
+            string rootDir = Directory.GetCurrentDirectory();
+            string testDataDir = Path.Join(Directory.GetParent(rootDir).Parent.Parent.Parent.FullName, "jsonexamples");
             string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories).ToArray();
 
             foreach (var file in files)
