@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
@@ -26,9 +24,8 @@ namespace Benchmarks
 
         public IEnumerable<object[]> TestData()
         {
-            string rootDir = Directory.GetCurrentDirectory();
-            string testDataDir = Path.Join(Directory.GetParent(rootDir).Parent.Parent.Parent.FullName, "jsonexamples");
-            string[] files = Directory.GetFiles(testDataDir, "*.json", SearchOption.AllDirectories).ToArray();
+            string jsonExamples = Environment.GetEnvironmentVariable("pathToJsonExamples");
+            string[] files = Directory.GetFiles(jsonExamples, "*.json", SearchOption.AllDirectories).ToArray();
 
             foreach (var file in files)
             {
